@@ -31,6 +31,9 @@
 #include "AHRS.h"
 #include "CAN_receive.h"
 
+#include "user_lib.h"
+#include "arm_math.h"
+
 #define Communication 3
 #define gravity				9.79484
 
@@ -67,6 +70,9 @@ extern DMA_HandleTypeDef hdma_usart6_tx;
 extern code motor[4];
 extern uint8_t rx_line_buff[];
 
+extern uint16_t step_cnt;
+extern int move_order[100][5];
+
 extern pid_type_def speed_pid;//整体速度环
 extern pid_type_def motor_speed_pid[4];//电机速度环(电机环)
 extern pid_type_def roll_pid;//roll环控制pid
@@ -85,6 +91,8 @@ static const fp32 imu_temp_PID[3] = {TEMPERATURE_PID_KP, TEMPERATURE_PID_KI, TEM
 
 float gyro_erro[3];
 float accel_erro[3];
+
+first_order_filter_type_t accel_filter[3];
 
 //在中断里面解算姿态
 
@@ -148,19 +156,23 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 		accel_erro[2]=1.0073*(accel_erro[2])+0.0071;//校准每个轴
 		
 		cos_tri[0]=accel_erro[2]/gravity;
-		cos_tri[1]=accel_erro[1]/gravity;
-		cos_tri[2]=accel_erro[0]/gravity;
+		cos_tri[1]=accel_erro[0]/gravity;
+		cos_tri[2]=accel_erro[1]/gravity;
 		
-		double cos_k=accel_erro[0]*accel_erro[0]*accel_erro[0]+accel_erro[1]*accel_erro[1]*accel_erro[1]+accel_erro[2]*accel_erro[2]*accel_erro[2]-3*accel_erro[0]*accel_erro[1]*accel_erro[2];
-		cos_tri[0]=(accel_erro[2]*accel_erro[2]-accel_erro[1]*accel_erro[0])*gravity/cos_k;
-		cos_tri[1]=(accel_erro[1]*accel_erro[1]-accel_erro[0]*accel_erro[2])*gravity/cos_k;
-		cos_tri[2]=(accel_erro[0]*accel_erro[0]-accel_erro[1]*accel_erro[2])*gravity/cos_k;//计算角度关系(精度更高)
+//		double cos_k=accel_erro[0]*accel_erro[0]*accel_erro[0]+accel_erro[1]*accel_erro[1]*accel_erro[1]+accel_erro[2]*accel_erro[2]*accel_erro[2]-3*accel_erro[0]*accel_erro[1]*accel_erro[2];
+//		cos_tri[0]=(accel_erro[2]*accel_erro[2]-accel_erro[1]*accel_erro[0])*gravity/cos_k;
+//		cos_tri[1]=(accel_erro[1]*accel_erro[1]-accel_erro[0]*accel_erro[2])*gravity/cos_k;
+//		cos_tri[2]=(accel_erro[0]*accel_erro[0]-accel_erro[1]*accel_erro[2])*gravity/cos_k;//计算角度关系(精度更高)
+		fp32 time=0.00125;
+		for(int i=0;i<3;i++)
+			first_order_filter_init(&accel_filter[0],0.3,&time);
 		
 		gyro_flag=1;//gyro_flag change
 		accel_flag=1;//accel_flag change
-		osDelay(50);
-//		AHRS_init(quat,(float*)car.raccel,car.mag);
+		osDelay(100);
+		AHRS_init(quat,car.raccel,car.mag);
 	}//温度校准后开始计算加速度计和陀螺仪偏差		
+	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_2,500);
   for(;;)
   {
 		osDelay(50);	
@@ -176,36 +188,58 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		if(accel_flag!=0)//在校准完后开始读取数据
 		{
 			//还差处理坐标轴变换
-			car.accel[0]=1.0072*(imu_real_data.accel[0])+0.01;//
-			car.accel[1]=1.0065*(imu_real_data.accel[1])+0.1147;//
-			car.accel[2]=1.0073*(imu_real_data.accel[2])+0.0071;//
-			//去除重力加速度影响，由于加速度计在部分地方是准确的，且机赛车不是剧烈变换的运动，故不添加低通滤波
-			car.raccel[0]=cos_tri[0]*car.accel[0]+cos_tri[1]*car.accel[2]+cos_tri[2]*car.accel[1];
-			car.raccel[1]=cos_tri[0]*car.accel[1]+cos_tri[1]*car.accel[0]+cos_tri[2]*car.accel[2];
-			car.raccel[2]=cos_tri[0]*car.accel[2]+cos_tri[1]*car.accel[1]+cos_tri[2]*car.accel[0];
-//			if(car.raccel[0]<0.5)	car.raccel[0]=0;
-//			if(car.raccel[1]<0.5)	car.raccel[1]=0;
-//			if(car.raccel[2]<0.5)	car.raccel[2]=0;
-			car.integral_accel[0]=0.00078125*car.raccel[0]+car.volocity[0]*0.00125;//Acceleration is measured in millimeters
-			car.integral_accel[1]=0.00078125*car.raccel[1]+car.volocity[1]*0.00125;
-			car.integral_accel[2]=0.00078125*car.raccel[2]+car.volocity[2]*0.00125;//
 			
-			car.volocity[0]+=car.raccel[0]*1.25;
-			car.volocity[1]+=car.raccel[1]*1.25;
-			car.volocity[2]+=car.raccel[2]*1.25;
-//			if(motor[0].delta<5&&motor[0].delta>-5)
-//			{
-//				car.volocity[0]=0;
-//				car.volocity[1]=0;
-//			}
-//			
-			car.displacement[0]+=car.integral_accel[0]*cos(car.integral_gyro[0])-car.integral_accel[1]*sin(car.integral_gyro[1]);
-			car.displacement[1]+=car.integral_accel[1]*cos(car.integral_gyro[1])+car.integral_accel[1]*sin(car.integral_gyro[0]);
-			car.displacement[2]+=car.integral_accel[2];//这里要对加速度计数据进行处理
-			
+			car.accel[0]=1.0072*(imu_real_data.accel[0])+0.02-accel_erro[0];
+			car.accel[1]=1.0065*(imu_real_data.accel[1])+0.2294-accel_erro[1];
+			car.accel[2]=1.0073*(imu_real_data.accel[2])+0.0142-accel_erro[2];//修正校准误差
+			//搞低通滤波
+			for(int i=0;i<3;i++)
+			{
+				first_order_filter_cali(&accel_filter[i],car.accel[i]);
+				car.accel[i]=accel_filter[i].out;
+			}
+			//低通滤波处理加速度数据
+			car.raccel[0]=cos_tri[0]*car.accel[0]+cos_tri[1]*car.accel[1]+cos_tri[2]*car.accel[2];
+			car.raccel[1]=cos_tri[0]*car.accel[1]+cos_tri[1]*car.accel[2]+cos_tri[2]*car.accel[0];
+			car.raccel[2]=cos_tri[0]*car.accel[2]+cos_tri[1]*car.accel[0]+cos_tri[2]*car.accel[1];
+			//每个轴的加速度的修正值
+			if(motor[1].delta==0)
+			{
+				car.volocity[0]=0;
+				car.volocity[1]=0;
+				car.volocity[2]=0;				
+			}
+			else
+			{
+				switch(move_order[step_cnt][0])
+				{
+					case 0:
+					case 4:
+					{
+						car.volocity[0]=0;
+						car.volocity[1]=0;
+						car.volocity[2]=0;//旋转和听着对的===
+						break;
+					}
+					case 1:
+					case 2:
+					case 3:
+					case 5:
+					{
+						car.volocity[0]+=car.raccel[0]*1.25;//mm/s
+						car.volocity[1]+=car.raccel[1]*1.25;
+						car.volocity[2]+=car.raccel[2]*1.25;
+						break;
+					}
+				}
+			}
+			car.displacement[0]+=car.volocity[0]*0.00125+0.00078125*car.raccel[0];
+			car.displacement[1]+=car.volocity[1]*0.00125+0.00078125*car.raccel[1];			
+			car.displacement[2]+=car.volocity[2]*0.00125+0.00078125*car.raccel[2];			
+			//处理加速度的位移
 		}
 		
-	}//加速度
+	}//加速度的低通滤波完成 
 	if(GPIO_Pin==INT1_GYRO_Pin)
 	{
 		BMI088_read_gyro(imu_real_data.gyro,&imu_real_data.temp);
@@ -230,27 +264,23 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		
 		if(gyro_flag!=0)//在校准后对陀螺仪积分
 		{
-			for(int i=0;i<3;i++)
-			{
-//				if((car.gyro[i]<fabs(gyro_erro[i]))&&(car.gyro[i]>-fabs(gyro_erro[i])))//低通滤波
-//					car.gyro[i]=0;
-//				else 
-					car.gyro[i]=imu_real_data.gyro[i]-gyro_erro[i];//-gyro_erro[0]
-			}//低通滤波
-//			car.rgyro[0]=car.gyro[0];
-//			car.rgyro[1]=car.gyro[1];
-//			car.rgyro[2]=car.gyro[2];
-			car.rgyro[0]=cos_tri[0]*car.gyro[0]+cos_tri[1]*car.gyro[2]+cos_tri[2]*car.gyro[1];
-			car.rgyro[1]=cos_tri[0]*car.gyro[1]+cos_tri[1]*car.gyro[0]+cos_tri[2]*car.gyro[2];
-			car.rgyro[2]=cos_tri[0]*car.gyro[2]+cos_tri[1]*car.gyro[1]+cos_tri[2]*car.gyro[0];
-			
+//			for(int i=0;i<3;i++)
+//			{
+////				if((car.gyro[i]<fabs(gyro_erro[i]))&&(car.gyro[i]>-fabs(gyro_erro[i])))//低通滤波
+////					car.gyro[i]=0;
+////				else 
+//					car.gyro[i]=imu_real_data.gyro[i]-gyro_erro[i];//-gyro_erro[0]
+//			}//低通滤波
+			car.rgyro[0]=car.gyro[0]-gyro_erro[0];
+			car.rgyro[1]=car.gyro[1]-gyro_erro[1];
+			car.rgyro[2]=car.gyro[2]-gyro_erro[2];
+//			car.rgyro[0]=cos_tri[0]*car.gyro[0]+cos_tri[1]*car.gyro[2]+cos_tri[2]*car.gyro[1];
+//			car.rgyro[1]=cos_tri[0]*car.gyro[1]+cos_tri[1]*car.gyro[0]+cos_tri[2]*car.gyro[2];
+//			car.rgyro[2]=cos_tri[0]*car.gyro[2]+cos_tri[1]*car.gyro[1]+cos_tri[2]*car.gyro[0];	
 			car.integral_gyro[0]+=0.0025*car.rgyro[0];
 			car.integral_gyro[1]+=0.0025*car.rgyro[1];
-			car.integral_gyro[2]+=0.0025*car.rgyro[2];
-			
-//			AHRS_update(quat,0.001f,car.rgyro,car.raccel,car.mag);
-
-			
+			car.integral_gyro[2]+=0.0025*car.rgyro[2];	
+			car.yaw=AHRS_update(quat,0.001f,car.rgyro,car.raccel,car.mag);			
 		}//陀螺仪校准成功后，开始计算角度偏差
 	}//陀螺仪和温度控制
 	

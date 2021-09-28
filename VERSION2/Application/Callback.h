@@ -61,6 +61,7 @@ typedef struct{
 	float mag[3];
 	float displacement[3];//相对与初始位置的位移
 	float mag_begin[3];//初始位置的mag角度
+	float yaw;
 }CAR;
 
 

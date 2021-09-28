@@ -73,7 +73,7 @@ int frame_change[2];
 
 float roll_set=0;
 int frame_high=0;
-int step_cnt=0;
+uint16_t step_cnt=0;
 code motor[4];
 
 
