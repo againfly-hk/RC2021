@@ -1,0 +1,62 @@
+TIM5->Prescaler=8400-1
+TIM5->PerIOD=1000-1
+LED;
+
+TIM8->Prescaler=168-1
+TIM8->Period=20000-1
+50HZ 舵机
+
+TIM10->Prescaler=0
+TIM->Period=5000-1
+imu temperature control
+
+drawer 380000
+
+//底盘控制使用加速度计，线识别，编码器互补滤波
+//先尝试一下用编码器的效果，定义宏编译，使其可以在缺少的条件下正常运行，通过两者算另外一个的数据范围是否合理
+//800hz加速度计
+//400hz陀螺仪
+//200hz磁力计
+
+//在中断里面解算姿态
+struct CAR{
+	float accel[3];
+	float gyro[3];//解算出来实际的质态
+	float mag[3];
+	float integral_accel[3];
+	float integral_gyro[3];
+	float displacement[3];//相对与初始位置的位移
+	float mag_begin[3];//初始位置的mag角度
+}car;
+//记录开始的姿态
+
+
+//关于行走的协议：
+Order_number	Move_type
+num				1(沿x轴行走)	delta_x(沿x轴距离)
+				2(沿y轴行走)	delta_y(沿y轴距离)
+				3(斜着走)		delta_x,delta_y
+				4(转向)			rad
+				5(缓慢平移)		
+			
+x,y轴的平面，用加速度计和电机编码器，超声波
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
