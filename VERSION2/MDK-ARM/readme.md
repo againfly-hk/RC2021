@@ -44,8 +44,12 @@ x,y轴的平面，用加速度计和电机编码器，超声波
 
 
 
+//飞思卡尔方案：
+https://blog.csdn.net/qingfengxd1/article/details/106027819
 
+//四元数方案：
 
+https://www.zhihu.com/question/38298130
 
 
 
