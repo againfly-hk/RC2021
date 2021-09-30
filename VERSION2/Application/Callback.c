@@ -165,7 +165,7 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 //		cos_tri[2]=(accel_erro[0]*accel_erro[0]-accel_erro[1]*accel_erro[2])*gravity/cos_k;//计算角度关系(精度更高)
 		fp32 time=0.00125;
 		for(int i=0;i<3;i++)
-			first_order_filter_init(&accel_filter[0],0.3,&time);
+			first_order_filter_init(&accel_filter[i],0.3,&time);
 		
 		gyro_flag=1;//gyro_flag change
 		accel_flag=1;//accel_flag change

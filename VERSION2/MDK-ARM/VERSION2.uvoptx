@@ -218,7 +218,12 @@
         <Ww>
           <count>12</count>
           <WinNumber>1</WinNumber>
-          <ItemText>\\VERSION2\../USER_driver/CAN_receive.c\move_order</ItemText>
+          <ItemText>accel_filter</ItemText>
+        </Ww>
+        <Ww>
+          <count>13</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>quat</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
