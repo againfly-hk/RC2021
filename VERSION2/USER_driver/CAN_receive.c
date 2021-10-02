@@ -42,16 +42,18 @@
 extern CAN_HandleTypeDef hcan1;
 extern pid_type_def motor_pid[4];//0,1,2,3 电机采用开环控制，用三角函数去拟合
 extern pid_type_def frame_pid[2];//4,5
+extern uint8_t accel_flag;
 
 extern uint8_t failure_warning;
 extern CAR car;
 pid_type_def speed_pid;//整体速度环
 pid_type_def motor_speed_pid[4];//电机速度环
 pid_type_def roll_pid;
+float kflag=0.4;
 //这里是用来存order的，详情看readme
-int move_order[100][5]=
+int move_order[10][5]=
 {
-	1,1000,0,0,0
+	1,100,0,0,0
 	
 };
 //=
@@ -160,8 +162,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 			else
 			{
 				//PID调节到预定位置
-				PID_calc(&frame_pid[i-4],frame_change[i-4],frame_high);
-				PID_calc(&frame_pid[i-3],frame_change[i-3],frame_high);
+				PID_calc(&frame_pid[0],frame_change[0],frame_high);
+				PID_calc(&frame_pid[1],frame_change[1],frame_high);
+				frame_pid[0].out+=(frame_pid[1].fdb-frame_pid[0].fdb)*kflag;
 			  CAN_cmd_portal_frame(frame_pid[i-4].out,frame_pid[i-3].out,0);
 			}
 //			//CAN_cmd_chassis(-0x0ff,0x0ff,0x0ff,-0x0ff);//向前
@@ -199,14 +202,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 					motor[i].cnt--;
 			}
 		#endif
-		if(move_order[step_cnt][0]!=0)
+		if(move_order[step_cnt][0]!=0&&(accel_flag!=0))
 		{
 			switch(move_order[step_cnt][0])
 			{
 				case 1:
 				{
 					PID_calc(&speed_pid,car.displacement[0],move_order[step_cnt][1]);
-//					CAN_cmd_chassis(speed_pid.out,-speed_pid.out,-speed_pid.out,speed_pid.out);
+				//	CAN_cmd_chassis(speed_pid.out,-speed_pid.out,-speed_pid.out,speed_pid.out);
 					break;
 				}
 				case 2:CAN_cmd_chassis(0,0,0,0);break;

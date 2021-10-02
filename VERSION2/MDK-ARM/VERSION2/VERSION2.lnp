@@ -48,6 +48,7 @@
 "version2\heap_4.o"
 "version2\port.o"
 "version2\callback.o"
+"version2\user_task.o"
 "version2\bsp_iic.o"
 "version2\bsp_delay.o"
 "version2\bsp_spi.o"

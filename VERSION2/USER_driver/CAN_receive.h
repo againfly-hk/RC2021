@@ -53,6 +53,8 @@ typedef struct
 
 typedef struct{
 	int delta;
+	int odelta;
+	int oodelta;
 	int change;
 	int last_value;
 	int cnt;

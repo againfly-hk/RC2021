@@ -4,14 +4,14 @@
 #define frame_left_kp 0.30
 #define frame_left_ki 0.001
 #define frame_left_kd 70
-#define frame_left_max_out  0x9ff 
-#define frame_left_max_iout 0x3ff
+#define frame_left_max_out  0xaff 
+#define frame_left_max_iout 0x5ff
 
 #define frame_right_kp 0.30
 #define frame_right_ki 0.001
 #define frame_right_kd 70
-#define frame_right_max_out  0x9ff 
-#define frame_right_max_iout 0x3ff
+#define frame_right_max_out  0xaff 
+#define frame_right_max_iout 0x5ff
 
 pid_type_def frame_pid[2];
 

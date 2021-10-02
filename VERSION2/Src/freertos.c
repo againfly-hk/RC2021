@@ -54,13 +54,14 @@
 
 /* USER CODE END Variables */
 osThreadId testHandle;
+osThreadId line_detectHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-
 /* USER CODE END FunctionPrototypes */
 
 void test_task(void const * argument);
+void line_detect_task(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -127,6 +128,10 @@ void MX_FREERTOS_Init(void) {
   osThreadDef(test, test_task, osPriorityNormal, 0, 128);
   testHandle = osThreadCreate(osThread(test), NULL);
 
+  /* definition and creation of line_detect */
+  osThreadDef(line_detect, line_detect_task, osPriorityIdle, 0, 128);
+  line_detectHandle = osThreadCreate(osThread(line_detect), NULL);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -149,6 +154,24 @@ __weak void test_task(void const * argument)
     osDelay(1);
   }
   /* USER CODE END test_task */
+}
+
+/* USER CODE BEGIN Header_line_detect_task */
+/**
+* @brief Function implementing the line_detect thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_line_detect_task */
+__weak void line_detect_task(void const * argument)
+{
+  /* USER CODE BEGIN line_detect_task */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END line_detect_task */
 }
 
 /* Private application code --------------------------------------------------*/

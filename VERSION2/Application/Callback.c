@@ -100,7 +100,7 @@ CAR car;//记录开始的姿态
 
 void move_order_pid_init()
 {
-	float pid[3]={0.5,0,20};
+	float pid[3]={0.1,0.1,60};
 	PID_init(&speed_pid,PID_POSITION,pid,1000,500);//搞速度环
 	
 	for(int i=0;i<4;i++)
@@ -141,7 +141,7 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 			accel_erro[0]+=imu_real_data.accel[0];
 			accel_erro[1]+=imu_real_data.accel[1];
 			accel_erro[2]+=imu_real_data.accel[2];
-			osDelay(20);
+			osDelay(50);
 		}
 		gyro_erro[0]=gyro_erro[0]/100.0f;
 		gyro_erro[1]=gyro_erro[1]/100.0f;
@@ -151,9 +151,9 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 		accel_erro[1]=accel_erro[1]/100.0f;
 		accel_erro[2]=accel_erro[2]/100.0f;
 		
-		accel_erro[0]=1.0072*(accel_erro[0])+0.01;
-		accel_erro[1]=1.0065*(accel_erro[1])+0.1147;
-		accel_erro[2]=1.0073*(accel_erro[2])+0.0071;//校准每个轴
+		accel_erro[0]=1.0072*(accel_erro[0]);
+		accel_erro[1]=1.0065*(accel_erro[1]);
+		accel_erro[2]=1.0073*(accel_erro[2]);//校准每个轴
 		
 		cos_tri[0]=accel_erro[2]/gravity;
 		cos_tri[1]=accel_erro[0]/gravity;
@@ -165,16 +165,19 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 //		cos_tri[2]=(accel_erro[0]*accel_erro[0]-accel_erro[1]*accel_erro[2])*gravity/cos_k;//计算角度关系(精度更高)
 		fp32 time=0.00125;
 		for(int i=0;i<3;i++)
-			first_order_filter_init(&accel_filter[i],0.3,&time);
+			first_order_filter_init(&accel_filter[i],0.00125,&time);
 		
 		gyro_flag=1;//gyro_flag change
 		accel_flag=1;//accel_flag change
 		osDelay(100);
 		AHRS_init(quat,car.raccel,car.mag);
 	}//温度校准后开始计算加速度计和陀螺仪偏差		
-	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_2,500);
+	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_2,500);//这前面都是传感器和pid的初始化
+	
   for(;;)
   {
+		//想把这里作为运动控制，写太多在回调函数里面不合适
+		
 		osDelay(50);	
 	}
 }
@@ -188,10 +191,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		if(accel_flag!=0)//在校准完后开始读取数据
 		{
 			//还差处理坐标轴变换
-			
-			car.accel[0]=1.0072*(imu_real_data.accel[0])+0.02-accel_erro[0];
-			car.accel[1]=1.0065*(imu_real_data.accel[1])+0.2294-accel_erro[1];
-			car.accel[2]=1.0073*(imu_real_data.accel[2])+0.0142-accel_erro[2];//修正校准误差
+			car.accel[0]=1.0072*(imu_real_data.accel[0])-accel_erro[0];
+			car.accel[1]=1.0065*(imu_real_data.accel[1])-accel_erro[1];
+			car.accel[2]=1.0073*(imu_real_data.accel[2])-accel_erro[2]+gravity;//修正校准误差
 			//搞低通滤波
 			for(int i=0;i<3;i++)
 			{
@@ -199,15 +201,18 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				car.accel[i]=accel_filter[i].out;
 			}
 			//低通滤波处理加速度数据
-			car.raccel[0]=cos_tri[0]*car.accel[0]+cos_tri[1]*car.accel[1]+cos_tri[2]*car.accel[2];
-			car.raccel[1]=cos_tri[0]*car.accel[1]+cos_tri[1]*car.accel[2]+cos_tri[2]*car.accel[0];
-			car.raccel[2]=cos_tri[0]*car.accel[2]+cos_tri[1]*car.accel[0]+cos_tri[2]*car.accel[1];
+			car.raccel[0]=car.accel[0];
+			car.raccel[1]=car.accel[1];
+			car.raccel[2]=car.accel[2];
+//			car.raccel[0]=cos_tri[0]*car.accel[0]+cos_tri[1]*car.accel[1]+cos_tri[2]*car.accel[2];
+//			car.raccel[1]=cos_tri[0]*car.accel[1]+cos_tri[1]*car.accel[2]+cos_tri[2]*car.accel[0];
+//			car.raccel[2]=cos_tri[0]*car.accel[2]+cos_tri[1]*car.accel[0]+cos_tri[2]*car.accel[1];
 			//每个轴的加速度的修正值
-			if(motor[1].delta==0)
+			if(motor[1].delta==0&&motor[1].odelta==0&&motor[1].oodelta==0)//用机械修正加速度(解决静止时加速度漂移的问题)
 			{
 				car.volocity[0]=0;
 				car.volocity[1]=0;
-				car.volocity[2]=0;				
+//				car.volocity[2]=0;				
 			}
 			else
 			{
@@ -237,6 +242,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			car.displacement[1]+=car.volocity[1]*0.00125+0.00078125*car.raccel[1];			
 			car.displacement[2]+=car.volocity[2]*0.00125+0.00078125*car.raccel[2];			
 			//处理加速度的位移
+			motor[0].odelta=motor[0].delta;
+			motor[0].oodelta=motor[0].odelta;
 		}
 		
 	}//加速度的低通滤波完成 
