@@ -1,17 +1,17 @@
 #include "frame.h"
 #include "pid.h"
 
-#define frame_left_kp 0.30
-#define frame_left_ki 0.001
-#define frame_left_kd 70
-#define frame_left_max_out  0xaff 
-#define frame_left_max_iout 0x5ff
+#define frame_left_kp 0.40
+#define frame_left_ki 0.01
+#define frame_left_kd 40
+#define frame_left_max_out  3200
+#define frame_left_max_iout 600
 
-#define frame_right_kp 0.30
-#define frame_right_ki 0.001
-#define frame_right_kd 70
-#define frame_right_max_out  0xaff 
-#define frame_right_max_iout 0x5ff
+#define frame_right_kp 0.40
+#define frame_right_ki 0.01
+#define frame_right_kd 40
+#define frame_right_max_out  3200
+#define frame_right_max_iout 600
 
 pid_type_def frame_pid[2];
 

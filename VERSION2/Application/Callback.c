@@ -171,6 +171,8 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 		accel_flag=1;//accel_flag change
 		osDelay(100);
 		AHRS_init(quat,car.raccel,car.mag);
+		osDelay(50);
+		gyro_flag=2;
 	}//温度校准后开始计算加速度计和陀螺仪偏差		
 	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_2,500);//这前面都是传感器和pid的初始化
 	
@@ -194,6 +196,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			car.accel[0]=1.0072*(imu_real_data.accel[0])-accel_erro[0];
 			car.accel[1]=1.0065*(imu_real_data.accel[1])-accel_erro[1];
 			car.accel[2]=1.0073*(imu_real_data.accel[2])-accel_erro[2]+gravity;//修正校准误差
+			#ifdef accel_imu_using
 			//搞低通滤波
 			for(int i=0;i<3;i++)
 			{
@@ -244,12 +247,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			//处理加速度的位移
 			motor[0].odelta=motor[0].delta;
 			motor[0].oodelta=motor[0].odelta;
-		}
-		
-	}//加速度的低通滤波完成 
+			#endif
+		}		
+	}
 	if(GPIO_Pin==INT1_GYRO_Pin)
 	{
 		BMI088_read_gyro(imu_real_data.gyro,&imu_real_data.temp);
+		//温度控制
 		if((!temp_flag))
     {
 			if(imu_real_data.temp>=38.5f)	
@@ -261,33 +265,30 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			}
 			__HAL_TIM_SetCompare(&htim10,TIM_CHANNEL_1,MPU6500_TEMP_PWM_MAX);
 			return;
-		}
+		}	
 		else if(temp_flag!=0)
 		{
 			PID_calc(&imu_temp_pid,imu_real_data.temp,40.0f);
 			if (imu_temp_pid.out < 0.0f)	imu_temp_pid.out = 0.0f;
 			__HAL_TIM_SetCompare(&htim10,TIM_CHANNEL_1,imu_temp_pid.out);	//加温
-		}//温度pid调节
+		}
+		//温度pid调节
 		
 		if(gyro_flag!=0)//在校准后对陀螺仪积分
 		{
-//			for(int i=0;i<3;i++)
-//			{
-////				if((car.gyro[i]<fabs(gyro_erro[i]))&&(car.gyro[i]>-fabs(gyro_erro[i])))//低通滤波
-////					car.gyro[i]=0;
-////				else 
-//					car.gyro[i]=imu_real_data.gyro[i]-gyro_erro[i];//-gyro_erro[0]
-//			}//低通滤波
 			car.rgyro[0]=car.gyro[0]-gyro_erro[0];
 			car.rgyro[1]=car.gyro[1]-gyro_erro[1];
 			car.rgyro[2]=car.gyro[2]-gyro_erro[2];
-//			car.rgyro[0]=cos_tri[0]*car.gyro[0]+cos_tri[1]*car.gyro[2]+cos_tri[2]*car.gyro[1];
-//			car.rgyro[1]=cos_tri[0]*car.gyro[1]+cos_tri[1]*car.gyro[0]+cos_tri[2]*car.gyro[2];
-//			car.rgyro[2]=cos_tri[0]*car.gyro[2]+cos_tri[1]*car.gyro[1]+cos_tri[2]*car.gyro[0];	
+			#ifdef imu_gyro_using
 			car.integral_gyro[0]+=0.0025*car.rgyro[0];
 			car.integral_gyro[1]+=0.0025*car.rgyro[1];
-			car.integral_gyro[2]+=0.0025*car.rgyro[2];	
-			car.yaw=AHRS_update(quat,0.001f,car.rgyro,car.raccel,car.mag);			
+			car.integral_gyro[2]+=0.0025*car.rgyro[2];
+			#endif
+			if(gyro_flag==2)
+			{
+			AHRS_update(quat,0.001f,car.rgyro,car.raccel,car.mag);			
+	  	car.yaw=get_yaw(quat);
+			}
 		}//陀螺仪校准成功后，开始计算角度偏差
 	}//陀螺仪和温度控制
 	

@@ -30,6 +30,7 @@
 #include "bsp_drawer.h"
 #include "frame.h"//用于控制龙门架
 #include "Callback.h"
+#include "math.h"
 
 #define HIGH_1 140000
 #define HIGH_2 200000
@@ -50,6 +51,8 @@ pid_type_def speed_pid;//整体速度环
 pid_type_def motor_speed_pid[4];//电机速度环
 pid_type_def roll_pid;
 float kflag=0.4;
+float v1_control=0;
+float v2_control=0;
 //这里是用来存order的，详情看readme
 int move_order[10][5]=
 {
@@ -164,8 +167,18 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 				//PID调节到预定位置
 				PID_calc(&frame_pid[0],frame_change[0],frame_high);
 				PID_calc(&frame_pid[1],frame_change[1],frame_high);
+				if(fabs((float)(frame_high-frame_change[0]))<20000)
+				{
+					v1_control=motor_chassis[4].speed_rpm;
+					v2_control=motor_chassis[5].speed_rpm;
+				}
+				else
+				{
+					v1_control=0;
+					v2_control=0;
+				}
 				frame_pid[0].out+=(frame_pid[1].fdb-frame_pid[0].fdb)*kflag;
-			  CAN_cmd_portal_frame(frame_pid[i-4].out,frame_pid[i-3].out,0);
+			  CAN_cmd_portal_frame(frame_pid[0].out-v1_control*2,frame_pid[1].out-v2_control*2,0);
 			}
 //			//CAN_cmd_chassis(-0x0ff,0x0ff,0x0ff,-0x0ff);//向前
 //			if(car.integral_gyro[2]>roll_set+0.1)
