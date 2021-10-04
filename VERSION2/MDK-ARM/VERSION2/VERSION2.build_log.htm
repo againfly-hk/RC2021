@@ -22,37 +22,16 @@ Dialog DLL:      TCM.DLL V1.48.0.0
  
 <h2>Project:</h2>
 D:\RC2021\VERSION2\MDK-ARM\VERSION2.uvprojx
-Project File Date:  10/01/2021
+Project File Date:  10/04/2021
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'D:\Program Files (x86)\Keil_v5\ARM\ARMCC\Bin'
 Build target 'VERSION2'
-compiling Callback.c...
-..\Application\Callback.c(157): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  		accel_erro[0]=1.0072*(accel_erro[0]);
-..\Application\Callback.c(158): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  		accel_erro[1]=1.0065*(accel_erro[1]);
-..\Application\Callback.c(159): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  		accel_erro[2]=1.0073*(accel_erro[2]);//校准每个轴
-..\Application\Callback.c(161): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  		cos_tri[0]=accel_erro[2]/gravity;
-..\Application\Callback.c(162): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  		cos_tri[1]=accel_erro[0]/gravity;
-..\Application\Callback.c(163): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  		cos_tri[2]=accel_erro[1]/gravity;
-..\Application\Callback.c(191): warning:  #111-D: statement is unreachable
-  			break;
-..\Application\Callback.c(208): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  			car.accel[0]=1.0072*(imu_real_data.accel[0])-accel_erro[0];
-..\Application\Callback.c(209): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  			car.accel[1]=1.0065*(imu_real_data.accel[1])-accel_erro[1];
-..\Application\Callback.c(210): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  			car.accel[2]=1.0073*(imu_real_data.accel[2])-accel_erro[2]+gravity;//修正校准误差
-..\Application\Callback.c: 10 warnings, 0 errors
+compiling codemove.c...
 linking...
-Program Size: Code=48480 RO-data=2664 RW-data=528 ZI-data=46624  
+Program Size: Code=48892 RO-data=2676 RW-data=532 ZI-data=47196  
 FromELF: creating hex file...
-"VERSION2\VERSION2.axf" - 0 Error(s), 10 Warning(s).
+"VERSION2\VERSION2.axf" - 0 Error(s), 0 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -75,7 +54,7 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.4.0
-Build Time Elapsed:  00:00:04
+Build Time Elapsed:  00:00:06
 </pre>
 </body>
 </html>

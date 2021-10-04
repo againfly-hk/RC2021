@@ -155,12 +155,13 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 				 break;
        }	 
     }
-		if((i==4)||(i==5))//根据frame_change和frame_high来调节高度,当i=4的时候才控制，降低控制频率
+		if(i==4)//||(i==5))//根据frame_change和frame_high来调节高度,当i=4的时候才控制，降低控制频率
 		{
 			if(frame_high==0)	
 			{
 				CAN_cmd_portal_frame(0,0,0);
-				if(frame_change[i-4]<10000)	frame_change[i-4]=0;
+				if(frame_change[0]<5000)	frame_change[0]=0;
+				if(frame_change[1]<5000)	frame_change[1]=0;
 			}
 			else
 			{

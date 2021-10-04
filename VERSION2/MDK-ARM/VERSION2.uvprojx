@@ -743,6 +743,11 @@
               <FileType>1</FileType>
               <FilePath>.\filter.c</FilePath>
             </File>
+            <File>
+              <FileName>matrix.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\matrix.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -772,6 +777,11 @@
               <FileName>frame.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\frame.c</FilePath>
+            </File>
+            <File>
+              <FileName>codemove.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\codemove.c</FilePath>
             </File>
           </Files>
         </Group>

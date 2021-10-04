@@ -63,10 +63,12 @@
 "..\Components\algorithm\AHRS.lib"
 "..\Components\algorithm\arm_cortexM4lf_math.lib"
 "version2\filter.o"
+"version2\matrix.o"
 "version2\pid.o"
 "version2\door_servo.o"
 "version2\can_receive.o"
 "version2\frame.o"
+"version2\codemove.o"
 --strict --scatter "VERSION2\VERSION2.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

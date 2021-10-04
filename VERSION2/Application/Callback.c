@@ -33,10 +33,11 @@
 
 #include "user_lib.h"
 #include "arm_math.h"
+#include "codemove.h"
 
 #define Communication 3
 #define gravity				9.79484
-
+#define move_test
 bmi088_raw_data_t 	imu_raw_data;
 bmi088_real_data_t 	imu_real_data;
 
@@ -74,6 +75,9 @@ extern uint8_t rx_line_buff[];
 extern uint16_t step_cnt;
 extern int move_order[100][5];
 
+extern pid_type_def motor_move_displace_pid[4];
+extern pid_type_def motor_move_speed_pid[4];
+
 extern pid_type_def speed_pid;//整体速度环
 extern pid_type_def motor_speed_pid[4];//电机速度环(电机环)
 extern pid_type_def roll_pid;//roll环控制pid
@@ -98,6 +102,8 @@ first_order_filter_type_t accel_filter[3];
 //在中断里面解算姿态
 
 CAR car;//记录开始的姿态
+
+int test_move=0;
 
 void move_order_pid_init()
 {
@@ -177,6 +183,7 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 		osDelay(50);
 		gyro_flag=2;
 		for(int i=0;i<4;i++)	motor[i].change=0;//初始电机编码器
+		codemove_init();
 		
 	}//温度校准后开始计算加速度计和陀螺仪偏差		
 	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_2,500);//这前面都是传感器和pid的初始化
@@ -190,6 +197,15 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 			case 2:door_right();break;
 			break;
 		}
+		#ifdef move_test
+		PID_calc(&motor_move_displace_pid[0],-motor[0].change/100,test_move);
+		PID_calc(&motor_move_displace_pid[1],motor[1].change/100,test_move);
+		PID_calc(&motor_move_displace_pid[2],motor[2].change/100,test_move);
+		PID_calc(&motor_move_displace_pid[3],-motor[3].change/100,test_move);
+		if(failure_warning==0)
+			CAN_cmd_chassis(-motor_move_displace_pid[0].out,motor_move_displace_pid[1].out,motor_move_displace_pid[2].out,-motor_move_displace_pid[3].out);
+		else	CAN_cmd_chassis(0,0,0,0);
+		#endif
 		//想把这里作为运动控制，写太多在回调函数里面不合适
 		
 		osDelay(50);	
