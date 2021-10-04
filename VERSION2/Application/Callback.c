@@ -40,6 +40,7 @@
 bmi088_raw_data_t 	imu_raw_data;
 bmi088_real_data_t 	imu_real_data;
 
+uint8_t door_flag=0;
 uint8_t temp_flag=0;
 fp32 ist8310real[3];
 
@@ -111,6 +112,7 @@ void move_order_pid_init()
 
 void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 {
+
   while(BMI088_init())	{;}
  	while(ist8310_init())	{;}//初始化磁力计
 	frame_pid_init();       //初始化龙门架（前面为初始化设置）
@@ -120,7 +122,8 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 	osDelay(20);
 
 	left_door_off();
-	right_door_off();		
+	right_door_off();	
+	door_middle();		
 	PID_init(&imu_temp_pid, PID_POSITION, imu_temp_PID, TEMPERATURE_PID_MAX_OUT, TEMPERATURE_PID_MAX_IOUT);
 	osDelay(50);
 	car.mag_begin[0]=mag[0];
@@ -173,11 +176,20 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 		AHRS_init(quat,car.raccel,car.mag);
 		osDelay(50);
 		gyro_flag=2;
+		for(int i=0;i<4;i++)	motor[i].change=0;//初始电机编码器
+		
 	}//温度校准后开始计算加速度计和陀螺仪偏差		
 	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_2,500);//这前面都是传感器和pid的初始化
 	
   for(;;)
   {
+		switch(door_flag)
+		{
+			case 0:door_middle();break;
+			case 1:door_left();break;
+			case 2:door_right();break;
+			break;
+		}
 		//想把这里作为运动控制，写太多在回调函数里面不合适
 		
 		osDelay(50);	
