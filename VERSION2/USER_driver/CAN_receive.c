@@ -53,6 +53,7 @@ pid_type_def roll_pid;
 float kflag=0.4;
 float v1_control=0;
 float v2_control=0;
+int motor_code_using=0;
 //这里是用来存order的，详情看readme
 int move_order[10][5]=
 {
@@ -115,16 +116,13 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     CAN_RxHeaderTypeDef rx_header;
     uint8_t rx_data[8];
 		int8_t i;
-	
     HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data);
-	
 	  if(failure_warning==10)
 		{
 			CAN_cmd_chassis(0,0,0,0);
 			CAN_cmd_portal_frame(0,0,0);//分别控制左右龙门架电机
 			return;
 		}
- 
     switch(rx_header.StdId)
     {
 			{
@@ -196,10 +194,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 //			}
 //				
 				
-			
-			
 		}
 	  #ifdef code_using
+		if(motor_code_using==1)
+		{
 			if((i>=0)&&(i<=3))
 			{
 				if((motor_chassis[i].last_ecd>6000)&&(motor_chassis[i].ecd<3000))
@@ -215,26 +213,27 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 				if((motor[i].last_value<-0x7fffffff)&&(motor[i].last_value>-0x70000000)&&(motor[i].change>-0xffffff))				
 					motor[i].cnt--;
 			}
-		#endif
-		if(move_order[step_cnt][0]!=0&&(accel_flag!=0))
-		{
-			switch(move_order[step_cnt][0])
-			{
-				case 1:
-				{
-					PID_calc(&speed_pid,car.displacement[0],move_order[step_cnt][1]);
-				//	CAN_cmd_chassis(speed_pid.out,-speed_pid.out,-speed_pid.out,speed_pid.out);
-					break;
-				}
-				case 2:CAN_cmd_chassis(0,0,0,0);break;
-				case 3:CAN_cmd_chassis(0,0,0,0);break;
-				case 4:CAN_cmd_chassis(0,0,0,0);break;
-				case 5:CAN_cmd_chassis(0,0,0,0);break;
-				default:
-					CAN_cmd_chassis(0,0,0,0);
-					break;
-			}
 		}
+		#endif
+//		if(move_order[step_cnt][0]!=0&&(accel_flag!=0))
+//		{
+//			switch(move_order[step_cnt][0])
+//			{
+//				case 1:
+//				{
+//					PID_calc(&speed_pid,car.displacement[0],move_order[step_cnt][1]);
+//				//	CAN_cmd_chassis(speed_pid.out,-speed_pid.out,-speed_pid.out,speed_pid.out);
+//					break;
+//				}
+//				case 2:CAN_cmd_chassis(0,0,0,0);break;
+//				case 3:CAN_cmd_chassis(0,0,0,0);break;
+//				case 4:CAN_cmd_chassis(0,0,0,0);break;
+//				case 5:CAN_cmd_chassis(0,0,0,0);break;
+//				default:
+//					CAN_cmd_chassis(0,0,0,0);
+//					break;
+//			}
+//		}
 		
 }
 

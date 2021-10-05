@@ -5,6 +5,7 @@
   * @history
   *  Version    Date            Author          Modification
   *  V1.0.0     2021/8/28      AFShk           finish
+	这是一堆shit山，虽然有注释我还是不想看他了，快把我搞恶心了
   ==============================================================================
 *****************************(C) COPYRIGHT 2021 AFShk**************************/
 #include "FreeRTOS.h"
@@ -50,13 +51,7 @@ pid_type_def imu_temp_pid;
 uint8_t gyro_flag=0;
 uint8_t accel_flag=0;
 double cos_tri[3];
-//k=x^3+y^3+z^3-xyz;
-//cosa=(z^2-xy)g/k
-//cosb=(y^2-xz)g/k
-//cosc=(x^2-zy)g/k
-//x=xcosa+ycosc+zcosb
-//y=xcosb+ycosa+zcosc
-//z=xcosc+ycosb+zcosa
+float accel_errodata[3];
 
 extern fp32 BMI088_ACCEL_SEN;
 extern fp32 BMI088_GYRO_SEN;
@@ -83,7 +78,7 @@ extern pid_type_def motor_speed_pid[4];//电机速度环(电机环)
 extern pid_type_def roll_pid;//roll环控制pid
 //怎么解算整体速度环
 //具体内容看速度的运动学状态解析（先完成直线平移和旋转的简单命令，并测试互补逻辑）
-
+extern motor_measure_t motor_chassis[7];
 uint8_t spi_rxbuff[20];
 uint8_t spi_txbuff[20];
 uint8_t rx_light[3];
@@ -104,6 +99,7 @@ first_order_filter_type_t accel_filter[3];
 CAR car;//记录开始的姿态
 
 int test_move=0;
+//float yaw,roll,pitch;
 
 void move_order_pid_init()
 {
@@ -160,54 +156,60 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 		accel_erro[1]=accel_erro[1]/100.0f;
 		accel_erro[2]=accel_erro[2]/100.0f;
 		
-		accel_erro[0]=1.0072*(accel_erro[0]);
-		accel_erro[1]=1.0065*(accel_erro[1]);
-		accel_erro[2]=1.0073*(accel_erro[2]);//校准每个轴
-		
-		cos_tri[0]=accel_erro[2]/gravity;
-		cos_tri[1]=accel_erro[0]/gravity;
-		cos_tri[2]=accel_erro[1]/gravity;
-		
+		accel_errodata[0]=accel_erro[0];
+		accel_errodata[1]=accel_erro[1];
+		accel_errodata[2]=accel_erro[2];//using accel_errodata to save erro_data
+//		accel_erro[0]=1.0072*(accel_erro[0])+0.01;
+//		accel_erro[1]=1.0065*(accel_erro[1])+0.1147;
+//		accel_erro[2]=1.0073*(accel_erro[2])+0.0071;//校准每个轴
+//		cos_tri[0]=accel_erro[2]/gravity;
+//		cos_tri[1]=accel_erro[0]/gravity;
+//		cos_tri[2]=accel_erro[1]/gravity;
 //		double cos_k=accel_erro[0]*accel_erro[0]*accel_erro[0]+accel_erro[1]*accel_erro[1]*accel_erro[1]+accel_erro[2]*accel_erro[2]*accel_erro[2]-3*accel_erro[0]*accel_erro[1]*accel_erro[2];
 //		cos_tri[0]=(accel_erro[2]*accel_erro[2]-accel_erro[1]*accel_erro[0])*gravity/cos_k;
 //		cos_tri[1]=(accel_erro[1]*accel_erro[1]-accel_erro[0]*accel_erro[2])*gravity/cos_k;
-//		cos_tri[2]=(accel_erro[0]*accel_erro[0]-accel_erro[1]*accel_erro[2])*gravity/cos_k;//计算角度关系(精度更高)
+//		cos_tri[2]=(accel_erro[0]*accel_erro[0]-accel_erro[1]*accel_erro[2])*gravity/cos_k;//计算角度关系(精度更高),反解出三个轴角(只能在重力和板子相对位置始终不变的情况下才能使用)
+		
+#ifdef accel_filter		
 		fp32 time=0.00125;
 		for(int i=0;i<3;i++)
-			first_order_filter_init(&accel_filter[i],0.00125,&time);
+			first_order_filter_init(&accel_filter[i],0.00125,&time);//使用四元数，故使用低通滤波器
+#endif
 		
 		gyro_flag=1;//gyro_flag change
 		accel_flag=1;//accel_flag change
-		osDelay(100);
+		osDelay(100);//delay 0.5ms
 		AHRS_init(quat,car.raccel,car.mag);
 		osDelay(50);
-		gyro_flag=2;
+		gyro_flag=2;//当flag=2时进行姿态的解算
 		for(int i=0;i<4;i++)	motor[i].change=0;//初始电机编码器
-		codemove_init();
-		
+		codemove_init();//初始化编码器控制pid:speed,displace
 	}//温度校准后开始计算加速度计和陀螺仪偏差		
 	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_2,500);//这前面都是传感器和pid的初始化
-	
+	osDelay(40);
+	car.begin_yaw=car.yaw;
   for(;;)
   {
-		switch(door_flag)
-		{
-			case 0:door_middle();break;
-			case 1:door_left();break;
-			case 2:door_right();break;
-			break;
-		}
-		#ifdef move_test
-		PID_calc(&motor_move_displace_pid[0],-motor[0].change/100,test_move);
-		PID_calc(&motor_move_displace_pid[1],motor[1].change/100,test_move);
-		PID_calc(&motor_move_displace_pid[2],motor[2].change/100,test_move);
-		PID_calc(&motor_move_displace_pid[3],-motor[3].change/100,test_move);
-		if(failure_warning==0)
-			CAN_cmd_chassis(-motor_move_displace_pid[0].out,motor_move_displace_pid[1].out,motor_move_displace_pid[2].out,-motor_move_displace_pid[3].out);
-		else	CAN_cmd_chassis(0,0,0,0);
-		#endif
-		//想把这里作为运动控制，写太多在回调函数里面不合适
+		float angle;
+		angle=(car.yaw-car.begin_yaw)*2;
+		float cosa=cos(angle);
+		float sina=sin(angle);
 		
+//		car.v1=-1*((-cosa-sina)*car.vx+(-cosa+sina)*car.vy+28*car.w)*23.7946;//cm/s->rpm
+//		car.v2=-1*((-cosa+sina)*car.vx+(-cosa-sina)*car.vy+28*car.w)*23.7946;//cm
+//		car.v3=-1*((cosa+sina)*car.vx+(cosa-sina)*car.vy+28*car.w)*23.7946;
+//		car.v4=-1*((cosa-sina)*car.vx+(cosa+sina)*car.vy+28*car.w)*23.7946;
+		car.v1=-1*(1*car.vx+1*car.vy+28*car.w)*23.7946;//cm/s->rpm
+		car.v2=-1*(-1*car.vx+-1*car.vy+28*car.w)*23.7946;//cm
+		car.v3=-1*(-1*car.vx+1*car.vy+28*car.w)*23.7946;
+		car.v4=-1*(1*car.vx+-1*car.vy+28*car.w)*23.7946;
+		//相对于车体坐标系
+		//要乘以一个-1,这里是根据vx,vy,w反解出来的速度，用于速度环的控制,控制rpm
+		PID_calc(&motor_move_speed_pid[0],motor_chassis[0].speed_rpm,car.v1);
+		PID_calc(&motor_move_speed_pid[1],motor_chassis[1].speed_rpm,car.v1);
+		PID_calc(&motor_move_speed_pid[2],motor_chassis[2].speed_rpm,car.v1);
+		PID_calc(&motor_move_speed_pid[3],motor_chassis[3].speed_rpm,car.v1);
+		CAN_cmd_chassis(motor_move_speed_pid[0].out,motor_move_speed_pid[1].out,motor_move_speed_pid[2].out,motor_move_speed_pid[3].out);
 		osDelay(50);	
 	}
 }
@@ -221,9 +223,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		if(accel_flag!=0)//在校准完后开始读取数据
 		{
 			//还差处理坐标轴变换
-			car.accel[0]=1.0072*(imu_real_data.accel[0])-accel_erro[0];
-			car.accel[1]=1.0065*(imu_real_data.accel[1])-accel_erro[1];
-			car.accel[2]=1.0073*(imu_real_data.accel[2])-accel_erro[2]+gravity;//修正校准误差
+			car.raccel[0]=1.0072*(imu_real_data.accel[0]-accel_errodata[0]);
+			car.raccel[1]=1.0065*(imu_real_data.accel[1]-accel_errodata[1]);
+			car.raccel[2]=1.0073*(imu_real_data.accel[2]-accel_errodata[2])+gravity;//修正校准误差
+//			car.raccel[0]=cos_tri[0]*car.accel[0]+cos_tri[1]*car.accel[1]+cos_tri[2]*car.accel[2];
+//			car.raccel[1]=cos_tri[0]*car.accel[1]+cos_tri[1]*car.accel[2]+cos_tri[2]*car.accel[0];
+//			car.raccel[2]=cos_tri[0]*car.accel[2]+cos_tri[1]*car.accel[0]+cos_tri[2]*car.accel[1];
 			#ifdef accel_imu_using
 			//搞低通滤波
 			for(int i=0;i<3;i++)
@@ -235,9 +240,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			car.raccel[0]=car.accel[0];
 			car.raccel[1]=car.accel[1];
 			car.raccel[2]=car.accel[2];
-//			car.raccel[0]=cos_tri[0]*car.accel[0]+cos_tri[1]*car.accel[1]+cos_tri[2]*car.accel[2];
-//			car.raccel[1]=cos_tri[0]*car.accel[1]+cos_tri[1]*car.accel[2]+cos_tri[2]*car.accel[0];
-//			car.raccel[2]=cos_tri[0]*car.accel[2]+cos_tri[1]*car.accel[0]+cos_tri[2]*car.accel[1];
+
 			//每个轴的加速度的修正值
 			if(motor[1].delta==0&&motor[1].odelta==0&&motor[1].oodelta==0)//用机械修正加速度(解决静止时加速度漂移的问题)
 			{
@@ -304,9 +307,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		
 		if(gyro_flag!=0)//在校准后对陀螺仪积分
 		{
-			car.rgyro[0]=car.gyro[0]-gyro_erro[0];
-			car.rgyro[1]=car.gyro[1]-gyro_erro[1];
-			car.rgyro[2]=car.gyro[2]-gyro_erro[2];
+			car.rgyro[0]=imu_real_data.gyro[0]-gyro_erro[0];
+			car.rgyro[1]=imu_real_data.gyro[1]-gyro_erro[1];
+			car.rgyro[2]=imu_real_data.gyro[2]-gyro_erro[2];
 			#ifdef imu_gyro_using
 			car.integral_gyro[0]+=0.0025*car.rgyro[0];
 			car.integral_gyro[1]+=0.0025*car.rgyro[1];
@@ -316,6 +319,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			{
 			AHRS_update(quat,0.001f,car.rgyro,car.raccel,car.mag);			
 	  	car.yaw=get_yaw(quat);
+//			get_angle(quat,&yaw,&pitch,&roll);
 			}
 		}//陀螺仪校准成功后，开始计算角度偏差
 	}//陀螺仪和温度控制
