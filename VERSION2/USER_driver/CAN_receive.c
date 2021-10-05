@@ -31,6 +31,7 @@
 #include "frame.h"//用于控制龙门架
 #include "Callback.h"
 #include "math.h"
+#include "door_servo.h"
 
 #define HIGH_1 140000
 #define HIGH_2 200000
@@ -121,6 +122,8 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 		{
 			CAN_cmd_chassis(0,0,0,0);
 			CAN_cmd_portal_frame(0,0,0);//分别控制左右龙门架电机
+			front_door_down();
+			door_reset();
 			return;
 		}
     switch(rx_header.StdId)

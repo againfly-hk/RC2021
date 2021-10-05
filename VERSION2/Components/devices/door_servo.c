@@ -47,6 +47,20 @@ void door_right()
 {
 	__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_4,1100);
 }
-//tim1_channle4_door_control
 
+void door_reset()
+{
+	__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_4,500);
+}
+
+//tim1_channle4_door_control
+//__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_3,pwm_set);600,1300
+void front_door_lift()
+{
+	__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_3,600);
+}
+void front_door_down()
+{
+	__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_3,1300);
+}
 

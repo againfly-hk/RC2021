@@ -64,3 +64,5 @@ version2\can_receive.o: D:\Program Files (x86)\Keil_v5\ARM\ARMCC\Bin\..\include\
 version2\can_receive.o: ..\BSP\bsp_drawer.h
 version2\can_receive.o: ..\MDK-ARM\frame.h
 version2\can_receive.o: ..\Application\Callback.h
+version2\can_receive.o: ..\Components\devices\door_servo.h
+version2\can_receive.o: ../Inc/tim.h

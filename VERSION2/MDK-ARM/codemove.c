@@ -14,7 +14,7 @@ void codemove_init()
 	PID_init(&motor_move_displace_pid[2],PID_POSITION,codemove_pid,2000,500);
 	PID_init(&motor_move_displace_pid[3],PID_POSITION,codemove_pid,2000,500);
 	#ifdef speed_control_using
-	float speed_pid[3]={3.5,0,0};
+	float speed_pid[3]={3.8,1,10};
 	PID_init(&motor_move_speed_pid[0],PID_POSITION,speed_pid,6000,2000);
 	PID_init(&motor_move_speed_pid[1],PID_POSITION,speed_pid,6000,2000);
 	PID_init(&motor_move_speed_pid[2],PID_POSITION,speed_pid,6000,2000);

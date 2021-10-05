@@ -3,11 +3,7 @@
 
 #include "main.h"
 
-
-
-
-
-
+extern void line_detect_task(void const * argument);
 
 
 

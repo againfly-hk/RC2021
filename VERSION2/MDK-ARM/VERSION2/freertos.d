@@ -57,3 +57,4 @@ version2\freertos.o: ..\MDK-ARM\struct_typedef.h
 version2\freertos.o: ..\BSP\bsp_spi.h
 version2\freertos.o: ..\Components\controller\pid.h
 version2\freertos.o: ..\BSP\bsp_delay.h
+version2\freertos.o: ..\MDK-ARM\user_task.h

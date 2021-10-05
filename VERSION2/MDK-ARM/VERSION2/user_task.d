@@ -60,3 +60,4 @@ version2\user_task.o: ../Inc/tim.h
 version2\user_task.o: ../Inc/usart.h
 version2\user_task.o: ../Inc/dma.h
 version2\user_task.o: ..\Components\devices\door_servo.h
+version2\user_task.o: user_task.h

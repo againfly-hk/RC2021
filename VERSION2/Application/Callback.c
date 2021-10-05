@@ -86,7 +86,7 @@ extern uint8_t failure_warning;
 float rx_echo;
 float mag[3];
 float quat[4]={1.0f,0.0f,0.0f,0.0f};
-
+int pwm_set=0;
 static const fp32 imu_temp_PID[3] = {TEMPERATURE_PID_KP, TEMPERATURE_PID_KI, TEMPERATURE_PID_KD};
 
 float gyro_erro[3];
@@ -210,7 +210,7 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 		PID_calc(&motor_move_speed_pid[2],motor_chassis[2].speed_rpm,car.v1);
 		PID_calc(&motor_move_speed_pid[3],motor_chassis[3].speed_rpm,car.v1);
 		CAN_cmd_chassis(motor_move_speed_pid[0].out,motor_move_speed_pid[1].out,motor_move_speed_pid[2].out,motor_move_speed_pid[3].out);
-		osDelay(50);	
+		osDelay(2);	
 	}
 }
 

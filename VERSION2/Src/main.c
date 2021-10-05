@@ -69,6 +69,8 @@ uint8_t rx_echo_buff[2];
 uint8_t rx_line_buff[5];
 uint8_t failure_warning=0;
 
+uint8_t spi_tx_buff[8]={0xFF,0x11,0xAA};
+uint8_t spi_rx_buff[8];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

@@ -31,6 +31,7 @@
 #include "bsp_spi.h"
 #include "pid.h"
 #include "bsp_delay.h"
+#include "user_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -129,7 +130,7 @@ void MX_FREERTOS_Init(void) {
   testHandle = osThreadCreate(osThread(test), NULL);
 
   /* definition and creation of line_detect */
-  osThreadDef(line_detect, line_detect_task, osPriorityIdle, 0, 128);
+  osThreadDef(line_detect, line_detect_task, osPriorityNormal, 0, 128);
   line_detectHandle = osThreadCreate(osThread(line_detect), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
