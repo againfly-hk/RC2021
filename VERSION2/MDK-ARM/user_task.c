@@ -22,12 +22,13 @@ extern uint8_t door_flag;
 
 extern uint8_t spi_tx_buff[8];
 extern uint8_t spi_rx_buff[8];
-	
+extern uint8_t	spicnt;
 void line_detect_task(void const * argument)
-{
+{			
+//	HAL_SPI_Receive_IT(&hspi2,&spi_rx_buff[spicnt],1);
+		HAL_SPI_Receive_IT(&hspi2,spi_rx_buff,1);
 	while(1)
 	{
-		HAL_SPI_Transmit_DMA(&hspi2,spi_tx_buff,3);
 		{
 			if(rx_line_buff[0]==0xE0)
 			{
@@ -53,7 +54,7 @@ void line_detect_task(void const * argument)
 			case 2:door_right();left_door_off();right_door_on();break;
 			break;
 		}//across openmv to get order to control door
-		osDelay(10);
+		osDelay(100);
 	}
 }
 
@@ -62,7 +63,12 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
 	if(hspi==&hspi2)
 	{
-			HAL_SPI_Receive_DMA(&hspi2,spi_rx_buff,3);
+		spicnt++;
+		spicnt=spicnt%3;
+		HAL_SPI_Receive_IT(&hspi2,&spi_rx_buff[spicnt],1);
+//		HAL_SPI_Receive_IT(&hspi2,spi_rx_buff,1);
+		
+//			HAL_SPI_TransmitReceive_DMA(&hspi2,spi_tx_buff,spi_rx_buff,5);
 	}
 }
 

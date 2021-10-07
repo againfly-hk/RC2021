@@ -59,8 +59,6 @@
 
 /* External variables --------------------------------------------------------*/
 extern CAN_HandleTypeDef hcan1;
-extern DMA_HandleTypeDef hdma_spi2_rx;
-extern DMA_HandleTypeDef hdma_spi2_tx;
 extern SPI_HandleTypeDef hspi2;
 extern DMA_HandleTypeDef hdma_usart1_rx;
 extern DMA_HandleTypeDef hdma_usart1_tx;
@@ -75,6 +73,9 @@ extern uint8_t rx_echo_buff[];
 extern float rx_echo;
 extern uint8_t rx_line_buff[];
 extern uint8_t buf;
+extern uint8_t spi_tx_buff[];
+extern uint8_t spi_rx_buff[];
+uint8_t spicnt=0;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -204,34 +205,6 @@ void EXTI4_IRQHandler(void)
 }
 
 /**
-  * @brief This function handles DMA1 stream3 global interrupt.
-  */
-void DMA1_Stream3_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Stream3_IRQn 0 */
-
-  /* USER CODE END DMA1_Stream3_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_spi2_rx);
-  /* USER CODE BEGIN DMA1_Stream3_IRQn 1 */
-
-  /* USER CODE END DMA1_Stream3_IRQn 1 */
-}
-
-/**
-  * @brief This function handles DMA1 stream4 global interrupt.
-  */
-void DMA1_Stream4_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA1_Stream4_IRQn 0 */
-
-  /* USER CODE END DMA1_Stream4_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_spi2_tx);
-  /* USER CODE BEGIN DMA1_Stream4_IRQn 1 */
-
-  /* USER CODE END DMA1_Stream4_IRQn 1 */
-}
-
-/**
   * @brief This function handles CAN1 RX0 interrupts.
   */
 void CAN1_RX0_IRQHandler(void)
@@ -267,6 +240,8 @@ void SPI2_IRQHandler(void)
 {
   /* USER CODE BEGIN SPI2_IRQn 0 */
 
+//	HAL_SPI_Transmit(&hspi2,spi_tx_buff,1,10);
+		HAL_SPI_Transmit(&hspi2,&spi_tx_buff[spicnt],1,10);
   /* USER CODE END SPI2_IRQn 0 */
   HAL_SPI_IRQHandler(&hspi2);
   /* USER CODE BEGIN SPI2_IRQn 1 */

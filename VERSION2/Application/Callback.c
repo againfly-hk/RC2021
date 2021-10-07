@@ -68,7 +68,7 @@ extern code motor[4];
 extern uint8_t rx_line_buff[];
 
 extern uint16_t step_cnt;
-extern int move_order[100][5];
+extern order_t order;
 
 extern pid_type_def motor_move_displace_pid[4];
 extern pid_type_def motor_move_speed_pid[4];
@@ -86,11 +86,14 @@ extern uint8_t failure_warning;
 float rx_echo;
 float mag[3];
 float quat[4]={1.0f,0.0f,0.0f,0.0f};
-int pwm_set=0;
+int pwm_set=1300;
 static const fp32 imu_temp_PID[3] = {TEMPERATURE_PID_KP, TEMPERATURE_PID_KI, TEMPERATURE_PID_KD};
 
 float gyro_erro[3];
 float accel_erro[3];
+
+extern uint8_t spi_tx_buff[8];
+extern uint8_t spi_rx_buff[8];
 
 first_order_filter_type_t accel_filter[3];
 
@@ -114,7 +117,7 @@ void move_order_pid_init()
 
 void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 {
-
+	front_door_down();
   while(BMI088_init())	{;}
  	while(ist8310_init())	{;}//初始化磁力计
 	frame_pid_init();       //初始化龙门架（前面为初始化设置）
@@ -125,7 +128,8 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 
 	left_door_off();
 	right_door_off();	
-	door_middle();		
+	door_middle();	
+  front_door_down();		
 	PID_init(&imu_temp_pid, PID_POSITION, imu_temp_PID, TEMPERATURE_PID_MAX_OUT, TEMPERATURE_PID_MAX_IOUT);
 	osDelay(50);
 	car.mag_begin[0]=mag[0];
@@ -200,15 +204,15 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 //		car.v3=-1*((cosa+sina)*car.vx+(cosa-sina)*car.vy+28*car.w)*23.7946;
 //		car.v4=-1*((cosa-sina)*car.vx+(cosa+sina)*car.vy+28*car.w)*23.7946;
 		car.v1=-1*(1*car.vx+1*car.vy+28*car.w)*23.7946;//cm/s->rpm
-		car.v2=-1*(-1*car.vx+-1*car.vy+28*car.w)*23.7946;//cm
-		car.v3=-1*(-1*car.vx+1*car.vy+28*car.w)*23.7946;
+		car.v2=-1*(-1*car.vx+1*car.vy+28*car.w)*23.7946;//cm
+		car.v3=-1*(-1*car.vx-1*car.vy+28*car.w)*23.7946;
 		car.v4=-1*(1*car.vx+-1*car.vy+28*car.w)*23.7946;
 		//相对于车体坐标系
 		//要乘以一个-1,这里是根据vx,vy,w反解出来的速度，用于速度环的控制,控制rpm
 		PID_calc(&motor_move_speed_pid[0],motor_chassis[0].speed_rpm,car.v1);
-		PID_calc(&motor_move_speed_pid[1],motor_chassis[1].speed_rpm,car.v1);
-		PID_calc(&motor_move_speed_pid[2],motor_chassis[2].speed_rpm,car.v1);
-		PID_calc(&motor_move_speed_pid[3],motor_chassis[3].speed_rpm,car.v1);
+		PID_calc(&motor_move_speed_pid[1],motor_chassis[1].speed_rpm,car.v2);
+		PID_calc(&motor_move_speed_pid[2],motor_chassis[2].speed_rpm,car.v3);
+		PID_calc(&motor_move_speed_pid[3],motor_chassis[3].speed_rpm,car.v4);
 		CAN_cmd_chassis(motor_move_speed_pid[0].out,motor_move_speed_pid[1].out,motor_move_speed_pid[2].out,motor_move_speed_pid[3].out);
 		osDelay(2);	
 	}
@@ -336,6 +340,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	{
 		failure_warning=10;//当值为10时触发故障保护
 	}
+//	if(GPIO_Pin==spi2_nss_Pin)
+//	{
+//		HAL_SPI_TransmitReceive(&hspi2,spi_tx_buff,spi_rx_buff,5,10);
+//	}
 }
 	
 //    if(GPIO_Pin == INT1_ACCEL_Pin)

@@ -17,6 +17,9 @@ void door_reset(void);
 void front_door_lift(void);
 void front_door_down(void);
 	
+
+void rockert_level(void);
+void rocker_vertical(void);
+void rocket_reserse_side(void);
+
 #endif 
-
-

@@ -56,11 +56,14 @@ float v1_control=0;
 float v2_control=0;
 int motor_code_using=0;
 //这里是用来存order的，详情看readme
-int move_order[10][5]=
-{
-	1,100,0,0,0
-	
-};
+order_t order[10];
+//uint8_t	order_num
+//int16_t	vx
+//int16_t	vy
+//float		w
+//float		angle
+//int 		displacement
+
 //=
 //{
 //	

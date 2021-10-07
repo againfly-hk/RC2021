@@ -57,10 +57,23 @@ void door_reset()
 //__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_3,pwm_set);600,1300
 void front_door_lift()
 {
-	__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_3,600);
+	__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_2,600);
 }
 void front_door_down()
 {
-	__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_3,1300);
+	__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_2,1300);
+}
+
+void rockert_level()
+{
+	__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_3,2500);
+}
+void rocker_vertical()
+{
+	__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_3,1500);
+}
+void rocket_reserse_side()
+{
+	__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_3,500);
 }
 

@@ -41,6 +41,16 @@ typedef enum
 	
 } can_msg_id_e;
 
+typedef struct
+{
+	uint8_t	order_num;
+  int16_t	vx;
+  int16_t	vy;
+	float w;
+	float angle;
+	int displacement;
+}order_t;
+//order
 //rm motor data
 typedef struct
 {
