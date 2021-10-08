@@ -241,7 +241,7 @@ void SPI2_IRQHandler(void)
   /* USER CODE BEGIN SPI2_IRQn 0 */
 
 //	HAL_SPI_Transmit(&hspi2,spi_tx_buff,1,10);
-		HAL_SPI_Transmit(&hspi2,&spi_tx_buff[spicnt],1,10);
+
   /* USER CODE END SPI2_IRQn 0 */
   HAL_SPI_IRQHandler(&hspi2);
   /* USER CODE BEGIN SPI2_IRQn 1 */

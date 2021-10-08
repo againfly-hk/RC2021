@@ -63,6 +63,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
 	if(hspi==&hspi2)
 	{
+		HAL_SPI_Transmit(&hspi2,&spi_tx_buff[(spicnt+1)%3],1,10);
 		spicnt++;
 		spicnt=spicnt%3;
 		HAL_SPI_Receive_IT(&hspi2,&spi_rx_buff[spicnt],1);
