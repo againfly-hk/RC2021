@@ -42,7 +42,7 @@
 bmi088_raw_data_t 	imu_raw_data;
 bmi088_real_data_t 	imu_real_data;
 
-uint8_t door_flag=0;
+uint8_t door_flag=4;
 uint8_t temp_flag=0;
 fp32 ist8310real[3];
 
@@ -94,6 +94,7 @@ float accel_erro[3];
 
 extern uint8_t spi_tx_buff[8];
 extern uint8_t spi_rx_buff[8];
+extern int frame_high;
 
 first_order_filter_type_t accel_filter[3];
 
@@ -101,8 +102,8 @@ first_order_filter_type_t accel_filter[3];
 
 CAR car;//记录开始的姿态
 
-int test_move=0;
-//float yaw,roll,pitch;
+//int test_move=0;
+////float yaw,roll,pitch;
 
 void move_order_pid_init()
 {
@@ -117,6 +118,7 @@ void move_order_pid_init()
 
 void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 {
+	door_left();
 	front_door_down();
   while(BMI088_init())	{;}
  	while(ist8310_init())	{;}//初始化磁力计
@@ -140,6 +142,9 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 	while(temp_flag!=1)	{osDelay(5);}
 	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_1,500);//初始化完后蓝灯长亮
 	move_order_pid_init();//这里初始化运动的PID
+	//////////////////////////////////
+	frame_high=300000;
+	//////////////////////////////////
 	if(temp_flag==1)
 	{
 		for(cnt=0;cnt<100;cnt++)
@@ -194,6 +199,7 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 	car.begin_yaw=car.yaw;
   for(;;)
   {
+
 		float angle;
 		angle=(car.yaw-car.begin_yaw)*2;
 		float cosa=cos(angle);

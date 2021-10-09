@@ -127,6 +127,7 @@ int main(void)
   MX_USART6_UART_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+	
 	can_filter_init();//用于配置CAN接收器
 	delay_init(); //配置延时函数
   /* USER CODE END 2 */

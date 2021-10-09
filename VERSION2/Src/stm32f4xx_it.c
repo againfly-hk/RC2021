@@ -258,7 +258,7 @@ void USART1_IRQHandler(void)
 	uint8_t temp;
 	if(__HAL_UART_GET_FLAG(&huart1,UART_FLAG_IDLE)!=RESET)
 	{
-		__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_3,500);
+//		__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_3,500);
 		__HAL_UART_CLEAR_IDLEFLAG(&huart1);
 		HAL_UART_DMAStop(&huart1);
 		temp=__HAL_DMA_GET_COUNTER(&hdma_usart1_rx);	

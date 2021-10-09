@@ -22,4 +22,7 @@ void rockert_level(void);
 void rocker_vertical(void);
 void rocket_reserse_side(void);
 
+void back_door_away(void);
+void back_door_down(void);
+
 #endif 

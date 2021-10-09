@@ -77,3 +77,12 @@ void rocket_reserse_side()
 	__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_3,500);
 }
 
+void back_door_away()
+{
+	__HAL_TIM_SetCompare(&htim8,TIM_CHANNEL_1,2000);
+}
+
+void back_door_down()
+{
+	__HAL_TIM_SetCompare(&htim8,TIM_CHANNEL_1,1000);
+}

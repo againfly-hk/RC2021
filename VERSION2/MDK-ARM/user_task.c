@@ -23,12 +23,14 @@ extern uint8_t door_flag;
 extern uint8_t spi_tx_buff[8];
 extern uint8_t spi_rx_buff[8];
 extern uint8_t	spicnt;
+extern int pwm_set;
 void line_detect_task(void const * argument)
 {			
 //	HAL_SPI_Receive_IT(&hspi2,&spi_rx_buff[spicnt],1);
 		HAL_SPI_Receive_IT(&hspi2,spi_rx_buff,1);
 	while(1)
 	{
+		__HAL_TIM_SetCompare(&htim8,TIM_CHANNEL_1,pwm_set);
 		{
 			if(rx_line_buff[0]==0xE0)
 			{
@@ -52,6 +54,7 @@ void line_detect_task(void const * argument)
 			case 0:door_middle();left_door_off();right_door_off();break;
 			case 1:door_left();left_door_on();right_door_off();break;
 			case 2:door_right();left_door_off();right_door_on();break;
+			case 4:__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_4,2500);break;
 			break;
 		}//across openmv to get order to control door
 		osDelay(100);
