@@ -43,12 +43,12 @@ typedef enum
 
 typedef struct
 {
-	uint8_t	order_num;
-  int16_t	vx;
-  int16_t	vy;
+	uint8_t	order_final;
+	float rata;
+	float v;
 	float w;
 	float angle;
-	int displacement;
+	double displacement;
 }order_t;
 //order
 //rm motor data

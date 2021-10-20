@@ -81,7 +81,7 @@ e.¡­¡­
 ÆäÖÐÊý×éµÄÇ°Ãæ±êºÅÓÃÀ´´ú±íµÚ¼¸²½
 i´ú±íµÚ¼¸²½
 struct order step{
-order[i][0]-->ÔË¶¯µÄÀàÐÍ:0Ô­µØÍ£Ö¹£¬1ÑØxÖáÔË¶¯£¬2ÑØyÖáÔË¶¯£¬3°´±ÈÀý¿ØÖÆ£¨ÒÆ¶¯£©£¬4ÊÇÐý×ª¡£
+order[i][0]-->ÔË¶¯µÄÀàÐÍ:0Ô­µØÍ£Ö¹£¬1ÑØxÖáÔË¶¯£¬2ÑØyÖáÔË¶¯£¬3°´±ÈÀý¿ØÖÆ£¨ÒÆ¶¯£©£¬4ÊÇÐý×ª£¬5ÊÇ·ñÍê³É
 	order[i][1]-->
 	//1	vx,null,null,null,
 	order[i][2]-->
@@ -100,6 +100,20 @@ order[i][0]-->ÔË¶¯µÄÀàÐÍ:0Ô­µØÍ£Ö¹£¬1ÑØxÖáÔË¶¯£¬2ÑØyÖáÔË¶¯£¬3°´±ÈÀý¿ØÖÆ£¨ÒÆ¶¯£©£
 //int 		displacement
 
 
+//Í¨ÐÅÐ­Òé
+to drawer:
+//0b1111 1-e ´ú±í²»Í¬µÄ³¡¾°£º0000-µÚÒ»¸ö¸ß¶È	0101--µÚ¶þ¸ö¸ß¶È	1010--µÚÈý¸ö¸ß¶È	1111--µÚËÄ¸ö¸ß¶È		
+//0b1001 1-e ±£Áô
+//0b0110 1-e ±£Áô
 
+to car:
+//ob1111 1-e ´ú±íÍ£Ö¹ÔÝÍ££»
+//0b1001 1-e ±£Áô
+//0b0110 1-e ±£Áô
 
+//µÚÒ»¶Î vx/vy=1673/647;
+
+tim5_ch1´ú±í³õÊ¼»¯
+tim5_ch2´ú±íÔË¶¯×ËÌ¬
+tim_ch3´ú±íÄ£Ê½
 

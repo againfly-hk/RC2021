@@ -13,68 +13,88 @@
 #include "dma.h"
 #include "door_servo.h"
 #include "user_task.h"
+#include "Callback.h"
+
+extern uint8_t gyro_flag;
 extern uint8_t rx_echo_buff[2];
 extern uint8_t rx_line_buff[5];
 extern uint8_t failure_warning;
 uint8_t detect_hline_cnt[2]={0,0};
 uint8_t	detect_sline_cnt=0;
 extern uint8_t door_flag;
-
-extern uint8_t spi_tx_buff[8];
-extern uint8_t spi_rx_buff[8];
+extern CAR car;
+extern uint8_t spi_tx_buff[];
+extern uint8_t spi_rx_buff[];
 extern uint8_t	spicnt;
 extern int pwm_set;
 void line_detect_task(void const * argument)
 {			
-//	HAL_SPI_Receive_IT(&hspi2,&spi_rx_buff[spicnt],1);
-		HAL_SPI_Receive_IT(&hspi2,spi_rx_buff,1);
+	HAL_SPI_Receive_IT(&hspi2,&spi_rx_buff[spicnt],1);
+	while(gyro_flag!=2)	{osDelay(10);}
+	
 	while(1)
 	{
-		__HAL_TIM_SetCompare(&htim8,TIM_CHANNEL_1,pwm_set);
-		{
-			if(rx_line_buff[0]==0xE0)
-			{
-				detect_hline_cnt[0]++;
-				osDelay(50);
-			}
-			if(rx_line_buff[1]==0x00)
-			{
-				detect_sline_cnt++;
-				osDelay(50);
-			}
-			if(rx_line_buff[2]==0x00)
-			{
-				detect_hline_cnt[1]++;
-				osDelay(50);
-			}
-			osDelay(10);
-		}
-			switch(door_flag)
-		{
-			case 0:door_middle();left_door_off();right_door_off();break;
-			case 1:door_left();left_door_on();right_door_off();break;
-			case 2:door_right();left_door_off();right_door_on();break;
-			case 4:__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_4,2500);break;
-			break;
-		}//across openmv to get order to control door
-		osDelay(100);
+		//处理spi通信和线识别
+		car.vx=20;
+		car.vy=0;
+		osDelay(1000);
+		osDelay(1000);
+		car.vx=0;
+		car.vy=20;
+		osDelay(1000);
+		osDelay(1000);
+		car.vx=-20;
+		car.vy=0;
+		osDelay(1000);
+		osDelay(1000);
+		car.vx=	0;
+		car.vy=-20;
+		osDelay(1000);
+		osDelay(1000);//
+		
+//		__HAL_TIM_SetCompare(&htim8,TIM_CHANNEL_1,pwm_set);
+//		{
+//			if(rx_line_buff[0]==0xE0)
+//			{
+//				detect_hline_cnt[0]++;
+//				osDelay(50);
+//			}
+//			if(rx_line_buff[1]==0x00)
+//			{
+//				detect_sline_cnt++;
+//				osDelay(50);
+//			}
+//			if(rx_line_buff[2]==0x00)
+//			{
+//				detect_hline_cnt[1]++;
+//				osDelay(50);
+//			}
+//			osDelay(10);
+//		}
+//			switch(door_flag)
+//		{
+//			case 0:door_middle();left_door_off();right_door_off();break;
+//			case 1:door_left();left_door_on();right_door_off();break;
+//			case 2:door_right();left_door_off();right_door_on();break;
+//			case 4:__HAL_TIM_SetCompare(&htim1,TIM_CHANNEL_4,2500);break;
+//			break;
+//		}//across openmv to get order to control door
+//		osDelay(100);
 	}
 }
 
 
-void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)//
 {
 	if(hspi==&hspi2)
 	{
-		HAL_SPI_Transmit(&hspi2,&spi_tx_buff[(spicnt+1)%3],1,10);
-		spicnt++;
-		spicnt=spicnt%3;
-		HAL_SPI_Receive_IT(&hspi2,&spi_rx_buff[spicnt],1);
-//		HAL_SPI_Receive_IT(&hspi2,spi_rx_buff,1);
-		
-//			HAL_SPI_TransmitReceive_DMA(&hspi2,spi_tx_buff,spi_rx_buff,5);
+			HAL_SPI_Transmit(&hspi2,&spi_tx_buff[spicnt],1,10);
+			spicnt+=1;
+			spicnt%=3;
+			HAL_SPI_Receive_IT(&hspi2,&spi_rx_buff[spicnt],1);
 	}
 }
+
 
 
 

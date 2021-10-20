@@ -56,7 +56,18 @@ float v1_control=0;
 float v2_control=0;
 int motor_code_using=0;
 //这里是用来存order的，详情看readme
-order_t order[10];
+
+//typedef struct
+//{
+//	uint8_t	order_final;
+//	float rata;
+//	float v;
+//	float w;
+//	float angle;
+//	double displacement;
+//}order_t;
+
+order_t order[50]={0,0};
 //uint8_t	order_num
 //int16_t	vx
 //int16_t	vy
@@ -85,7 +96,7 @@ float roll_set=0;
 int frame_high=0;
 uint16_t step_cnt=0;
 code motor[4];
-
+uint8_t frame_change_allow=1;
 
 //motor data read
 #define get_motor_measure(ptr, data)                                    \
@@ -121,14 +132,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     uint8_t rx_data[8];
 		int8_t i;
     HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, rx_data);
-	  if(failure_warning==10)
-		{
-			CAN_cmd_chassis(0,0,0,0);
-			CAN_cmd_portal_frame(0,0,0);//分别控制左右龙门架电机
-			front_door_down();
-			door_reset();
-			return;
-		}
     switch(rx_header.StdId)
     {
 			{
@@ -137,11 +140,9 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
         case CAN_3508_M3_ID:
         case CAN_3508_M4_ID:
         case CAN_PORTAL_FRAME_LEFT_ID://0x204
-        case CAN_PORTAL_FRAME_RIGHT_ID://0x205
-				
+        case CAN_PORTAL_FRAME_RIGHT_ID://0x205			
 				i=rx_header.StdId-0x201;
-				get_motor_measure(&motor_chassis[i],rx_data);//0,1,2,3 motor 4,5 frame
-								
+				get_motor_measure(&motor_chassis[i],rx_data);//0,1,2,3 motor 4,5 frame							
 				if((i==4)||(i==5))
 				{
 					if((motor_chassis[i].last_ecd>6000)&&(motor_chassis[i].ecd<3000))
@@ -151,14 +152,15 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 					else
 						frame_delta[i-4]=motor_chassis[i].ecd-motor_chassis[i].last_ecd;
 					frame_change[i-4]+=frame_delta[i-4];			
-				}//龙门位置判断程序
+				}
 				break;
-       }
+       }//龙门架位置判断程序,用编码器来判断龙门架的高度
        default:
        {
 				 break;
        }	 
     }
+		
 		if(i==4)//||(i==5))//根据frame_change和frame_high来调节高度,当i=4的时候才控制，降低控制频率
 		{
 			if(frame_high==0)	
@@ -184,23 +186,19 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 				}
 				frame_pid[0].out+=(frame_pid[1].fdb-frame_pid[0].fdb)*kflag;
 			  CAN_cmd_portal_frame(frame_pid[0].out-v1_control*2,frame_pid[1].out-v2_control*2,0);
-			}
-//			//CAN_cmd_chassis(-0x0ff,0x0ff,0x0ff,-0x0ff);//向前
-//			if(car.integral_gyro[2]>roll_set+0.1)
-//			{
-//				CAN_cmd_chassis(0x22f,0x22f,0x22f,0x22f);
-//			}
-//			else if(car.integral_gyro[2]<roll_set-0.1)
-//			{
-//				CAN_cmd_chassis(-0x22f,-0x22f,-0x22f,-0x22f);
-//			}
-//			else
-//			{
-//				CAN_cmd_chassis(0,0,0,0);
-//			}
-//				
-				
+			}	
+		}//龙门架代码调节
+		
+		if(failure_warning==10)
+		{
+			CAN_cmd_chassis(0,0,0,0);
+			frame_high=0;
+			frame_change_allow=0;
+			front_door_down();
+			door_reset();
+			return;
 		}
+		
 	  #ifdef code_using
 		if(motor_code_using==1)
 		{
@@ -221,26 +219,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 			}
 		}
 		#endif
-//		if(move_order[step_cnt][0]!=0&&(accel_flag!=0))
-//		{
-//			switch(move_order[step_cnt][0])
-//			{
-//				case 1:
-//				{
-//					PID_calc(&speed_pid,car.displacement[0],move_order[step_cnt][1]);
-//				//	CAN_cmd_chassis(speed_pid.out,-speed_pid.out,-speed_pid.out,speed_pid.out);
-//					break;
-//				}
-//				case 2:CAN_cmd_chassis(0,0,0,0);break;
-//				case 3:CAN_cmd_chassis(0,0,0,0);break;
-//				case 4:CAN_cmd_chassis(0,0,0,0);break;
-//				case 5:CAN_cmd_chassis(0,0,0,0);break;
-//				default:
-//					CAN_cmd_chassis(0,0,0,0);
-//					break;
-//			}
-//		}
-		
+		//移动控制的代码写在user_task里面
 }
 
 

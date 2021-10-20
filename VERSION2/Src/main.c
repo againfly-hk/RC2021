@@ -70,7 +70,7 @@ uint8_t rx_line_buff[5];
 uint8_t failure_warning=0;
 
 uint8_t spi_tx_buff[3]={0xAA,0x11,0xAA};
-uint8_t spi_rx_buff[3];
+uint8_t spi_rx_buff[4];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

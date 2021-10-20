@@ -241,6 +241,7 @@ void SPI2_IRQHandler(void)
   /* USER CODE BEGIN SPI2_IRQn 0 */
 
 //	HAL_SPI_Transmit(&hspi2,spi_tx_buff,1,10);
+//	HAL_SPI_Transmit(&hspi2,&spi_tx_buff[spicnt],1,10);
 
   /* USER CODE END SPI2_IRQn 0 */
   HAL_SPI_IRQHandler(&hspi2);
@@ -350,7 +351,6 @@ void USART6_IRQHandler(void)
 	uint8_t temp;
 	if(__HAL_UART_GET_FLAG(&huart6,UART_FLAG_IDLE)!=RESET)
 	{
-		__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_3,500);
 		__HAL_UART_CLEAR_IDLEFLAG(&huart6);
 		HAL_UART_DMAStop(&huart6);
 		temp=__HAL_DMA_GET_COUNTER(&hdma_usart6_rx);	
