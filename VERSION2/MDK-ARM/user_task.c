@@ -27,30 +27,53 @@ extern uint8_t spi_tx_buff[];
 extern uint8_t spi_rx_buff[];
 extern uint8_t	spicnt;
 extern int pwm_set;
+int echo_distance=100000;
+uint8_t movement_test=0;
+int movement_osdelay=1000;
+
 void line_detect_task(void const * argument)
 {			
 	HAL_SPI_Receive_IT(&hspi2,&spi_rx_buff[spicnt],1);
 	while(gyro_flag!=2)	{osDelay(10);}
 	
-	while(1)
+  while(1)
 	{
-		//处理spi通信和线识别
-		car.vx=20;
-		car.vy=0;
-		osDelay(1000);
-		osDelay(1000);
-		car.vx=0;
-		car.vy=20;
-		osDelay(1000);
-		osDelay(1000);
-		car.vx=-20;
-		car.vy=0;
-		osDelay(1000);
-		osDelay(1000);
-		car.vx=	0;
-		car.vy=-20;
-		osDelay(1000);
-		osDelay(1000);//
+		echo_distance=rx_echo_buff[0]<<8|rx_echo_buff[1];
+		osDelay(2);
+//		if(movement_test==0)
+//		{
+//				car.vx=52*2;
+//				car.vy=20*2;
+//				osDelay(movement_osdelay);
+//			  movement_test++;
+//		}
+//		if(movement_test==1)
+//		{
+//				car.vx=0;
+//				car.vy=0;
+//				osDelay(1000);
+//				osDelay(1000);			
+//		}
+//		if(movement_test==2)
+//		{
+//				car.vx=-52*2;
+//				car.vy=-20*2;
+//				osDelay(movement_osdelay);
+//			  movement_test--;
+//		}
+
+//		car.vx=0;
+//		car.vy=20;
+//		osDelay(1000);
+//		osDelay(1000);
+//		car.vx=-20;
+//		car.vy=0;
+//		osDelay(1000);
+//		osDelay(1000);
+//		car.vx=	0;
+//		car.vy=-20;
+//		osDelay(1000);
+//		osDelay(1000);//
 		
 //		__HAL_TIM_SetCompare(&htim8,TIM_CHANNEL_1,pwm_set);
 //		{

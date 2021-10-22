@@ -62,12 +62,12 @@ typedef struct
 } motor_measure_t;
 
 typedef struct{
-	int delta;
-	int odelta;
-	int oodelta;
 	int change;
+	int delta;
 	int last_value;
 	int cnt;
+//	int odelta;
+//	int oodelta;
 }code;
 
 

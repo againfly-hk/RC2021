@@ -67,7 +67,7 @@ int motor_code_using=0;
 //	double displacement;
 //}order_t;
 
-order_t order[50]={0,0};
+order_t order[50]={0,1/2.6,0,0,0,1000000};
 //uint8_t	order_num
 //int16_t	vx
 //int16_t	vy
@@ -202,7 +202,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	  #ifdef code_using
 		if(motor_code_using==1)
 		{
-			if((i>=0)&&(i<=3))
+			if((i==1)||(i==2))
 			{
 				if((motor_chassis[i].last_ecd>6000)&&(motor_chassis[i].ecd<3000))
 						motor[i].delta=(8192-motor_chassis[i].last_ecd)+(motor_chassis[i].ecd);
@@ -216,6 +216,22 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 					motor[i].cnt++;
 				if((motor[i].last_value<-0x7fffffff)&&(motor[i].last_value>-0x70000000)&&(motor[i].change>-0xffffff))				
 					motor[i].cnt--;
+			}
+			else if((i==0)||(i==3))
+			{
+				if((motor_chassis[i].last_ecd>6000)&&(motor_chassis[i].ecd<3000))
+						motor[i].delta=(8192-motor_chassis[i].last_ecd)+(motor_chassis[i].ecd);
+				else if((motor_chassis[i].ecd>6000)&&(motor_chassis[i].last_ecd<1000))
+						motor[i].delta=-((8192-motor_chassis[i].ecd)+motor_chassis[i].last_ecd);
+				else
+						motor[i].delta=motor_chassis[i].ecd-motor_chassis[i].last_ecd;
+        motor[i].last_value=motor[i].change;	
+				motor[i].change-=motor[i].delta;
+				if((motor[i].last_value<0x7fffffff)&&(motor[i].last_value>0x70000000)&&(motor[i].change<0xffffff))				
+					motor[i].cnt++;
+				if((motor[i].last_value<-0x7fffffff)&&(motor[i].last_value>-0x70000000)&&(motor[i].change>-0xffffff))				
+					motor[i].cnt--;//用于转换方向
+//				motor_chassis[i].speed_rpm=-motor_chassis[i].speed_rpm;//将速度转为正方向的
 			}
 		}
 		#endif

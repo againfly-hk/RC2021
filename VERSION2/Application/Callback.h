@@ -51,19 +51,19 @@
 #define INS_MAG_Z_ADDRESS_OFFSET 2
 
 typedef struct{
-//	float accel[3];
-	float raccel[3];	
-//	float integral_accel[3];	
-//	float volocity[3];
-	float gyro[3];//解算出来实际的质态
+	float raccel[3];
 	float rgyro[3];
-	float integral_gyro[3];
 	float mag[3];
-	float displacement[3];//相对与初始位置的位移
-	float mag_begin[3];//初始位置的mag角度
 	float yaw;
 	float begin_yaw;
 	float v1,v2,v3,v4,vx,vy,w;
+	float integral_gyro[3];	
+//	float gyro[3];//解算出来实际的质态
+//	float accel[3];	
+//	float integral_accel[3];	
+//	float volocity[3];	
+//	float displacement[3];//相对与初始位置的位移
+	float mag_begin[3];//初始位置的mag角度	
 }CAR;
 
 

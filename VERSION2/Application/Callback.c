@@ -90,25 +90,39 @@ int pwm_set=1300;
 static const fp32 imu_temp_PID[3] = {TEMPERATURE_PID_KP, TEMPERATURE_PID_KI, TEMPERATURE_PID_KD};
 float gyro_erro[3];
 float accel_erro[3];
-
+extern int echo_distance;
 float angle;
 float cosa;
 float sina;
 
+int displacement=0;
+
+uint8_t code_record=1;
 uint8_t order_step=0;
 extern uint8_t spi_tx_buff[8];
 extern uint8_t spi_rx_buff[8];
 extern int frame_high;
 first_order_filter_type_t accel_filter[3];
-
+extern int motor_code_using;
 //在中断里面解算姿态
 CAR car;//记录开始的姿态
+void move_pid_calc(void)
+{
+		car.v1=-1*(1*car.vx+1*car.vy+28*car.w)*23.7946;//cm/s->rpm
+		car.v2=-1*(-1*car.vx+1*car.vy+28*car.w)*23.7946;//cm
+		car.v3=-1*(-1*car.vx-1*car.vy+28*car.w)*23.7946;
+		car.v4=-1*(1*car.vx+-1*car.vy+28*car.w)*23.7946;
+		PID_calc(&motor_move_speed_pid[0],motor_chassis[0].speed_rpm,car.v1);
+		PID_calc(&motor_move_speed_pid[1],motor_chassis[1].speed_rpm,car.v2);
+		PID_calc(&motor_move_speed_pid[2],motor_chassis[2].speed_rpm,car.v3);
+		PID_calc(&motor_move_speed_pid[3],motor_chassis[3].speed_rpm,car.v4);
+		CAN_cmd_chassis(motor_move_speed_pid[0].out,motor_move_speed_pid[1].out,motor_move_speed_pid[2].out,motor_move_speed_pid[3].out);			
+}
 
 void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 {
 	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_1,500);
 	door_left();
-	front_door_down();
 	left_door_off();
 	right_door_off();	
 	door_middle();
@@ -123,18 +137,9 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
   HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);//can enable
 		
 	PID_init(&imu_temp_pid, PID_POSITION, imu_temp_PID, TEMPERATURE_PID_MAX_OUT, TEMPERATURE_PID_MAX_IOUT);
-	osDelay(10);
-
-	car.mag_begin[0]=mag[0];
-	car.mag_begin[1]=mag[1];
-	car.mag_begin[2]=mag[2];//Record the compass Angle at the beginning
-	
 	uint8_t cnt=0;
 	while(temp_flag!=1)	{osDelay(1);}
-  
-	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_1,1000);
-	frame_high=300000;
-	
+	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_1,1000);		
 	if(temp_flag==1)
 	{
 		for(cnt=0;cnt<100;cnt++)
@@ -160,20 +165,24 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 		accel_flag=1;//accel_flag change
 		//代表已经完成误差值记录
 		
+		car.mag_begin[0]=mag[0];
+		car.mag_begin[1]=mag[1];
+		car.mag_begin[2]=mag[2];//Record the compass Angle at the beginning
 		osDelay(20);//delay 0.5ms
-		AHRS_init(quat,car.raccel,car.mag);
-		osDelay(50);
-		gyro_flag=2;//当flag=2时进行姿态的解算
-	}	
-	
+		AHRS_init(quat,car.raccel,car.mag_begin);
+	}			
 	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_1,0);//这前面都是传感器和pid的初始化
 	codemove_init();
+	frame_high=200000;		gyro_flag=2;//当flag=2时进行姿态的解算
+	osDelay(20);
+	car.begin_yaw=car.yaw;	
+	motor_code_using=1;
 	osDelay(10);
-	car.begin_yaw=car.yaw;
 	
   for(;;)//运动控制部分
   {
 		angle=(car.yaw-car.begin_yaw)*2;
+		
 		cosa=cos(angle);
 		sina=sin(angle);//解析运动的姿态
 		
@@ -183,17 +192,77 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 		}
 		
 		{
-		car.v1=-1*(1*car.vx+1*car.vy+28*car.w)*23.7946;//cm/s->rpm
-		car.v2=-1*(-1*car.vx+1*car.vy+28*car.w)*23.7946;//cm
-		car.v3=-1*(-1*car.vx-1*car.vy+28*car.w)*23.7946;
-		car.v4=-1*(1*car.vx+-1*car.vy+28*car.w)*23.7946;
 		//相对于车体坐标系
-		//要乘以一个-1,这里是根据vx,vy,w反解出来的速度，用于速度环的控制,控制rpm
-		PID_calc(&motor_move_speed_pid[0],motor_chassis[0].speed_rpm,car.v1);
-		PID_calc(&motor_move_speed_pid[1],motor_chassis[1].speed_rpm,car.v2);
-		PID_calc(&motor_move_speed_pid[2],motor_chassis[2].speed_rpm,car.v3);
-		PID_calc(&motor_move_speed_pid[3],motor_chassis[3].speed_rpm,car.v4);
-		CAN_cmd_chassis(motor_move_speed_pid[0].out,motor_move_speed_pid[1].out,motor_move_speed_pid[2].out,motor_move_speed_pid[3].out);
+		//要乘以一个-1,这里是根据vx,vy,w反解出来的速度，用于速度环的控制,控制rpm  
+		
+		if(code_record==1&&failure_warning!=10&&order_step==0)//这里是用编码器控制的代码，具体思路可以参考龙门架的代码
+		{
+			
+			PID_calc(&motor_move_displace_pid[0],motor[0].change,order[order_step].displacement);		
+			car.vx=motor_move_displace_pid[0].out;
+			car.vy=car.vx*order[order_step].rata;
+			
+			car.v1=-1*(1*car.vx+1*car.vy+28*car.w)*23.7946;//cm/s->rpm //关于速度的转换自动改成了对应的
+			car.v2=-1*(-1*car.vx+1*car.vy+28*car.w)*23.7946;//cm
+			car.v3=-1*(-1*car.vx-1*car.vy+28*car.w)*23.7946;
+			car.v4=-1*(1*car.vx+-1*car.vy+28*car.w)*23.7946;
+			
+			PID_calc(&motor_move_speed_pid[0],motor_chassis[0].speed_rpm,car.v1);
+			PID_calc(&motor_move_speed_pid[1],motor_chassis[1].speed_rpm,car.v2);
+			PID_calc(&motor_move_speed_pid[2],motor_chassis[2].speed_rpm,car.v3);
+			PID_calc(&motor_move_speed_pid[3],motor_chassis[3].speed_rpm,car.v4);
+			CAN_cmd_chassis(motor_move_speed_pid[0].out,motor_move_speed_pid[1].out,motor_move_speed_pid[2].out,motor_move_speed_pid[3].out);						
+      if(motor[0].change==order[order_step].displacement)	order_step++;
+		}
+		else if(order_step==1&&failure_warning!=10)
+		{
+			car.vx=0;
+			car.vy=0;
+			car.w=2;
+			while(((rx_line_buff[0]&0x01)&&(rx_line_buff[2]&0x08))||((rx_line_buff[0]&0x04)&&(rx_line_buff[2]&0x20))||((rx_line_buff[0]&0x10)&&(rx_line_buff[2]&0x80)))
+			{
+				move_pid_calc();
+				osDelay(3);
+			}
+			car.w=0;
+			car.vx=20;
+			while(!(echo_distance<3000))
+			{
+				move_pid_calc();
+				osDelay(3);
+			}
+			car.vx=0;
+			car.vy=10;
+			while(echo_distance>1500)
+			{
+				move_pid_calc();
+				osDelay(3);
+			}
+			frame_high=120000;
+			spi_tx_buff[1]=0xF0;
+			car.vx=10;
+			while(!(spi_rx_buff[1]==0xF0))
+			{
+				move_pid_calc();
+				osDelay(3);
+			}
+			car.vx=0;
+			while(!(spi_rx_buff[1]==0xFA))
+			{
+				move_pid_calc();
+				osDelay(3);
+			}
+			car.vx=10;
+			while(!(spi_rx_buff[1]==0xF0))
+			{
+				move_pid_calc();
+				osDelay(3);
+			}
+		}
+		else if(code_record==0&&failure_warning!=10)//这里面是写通过速度控制的代码
+		{	
+			
+		}
 
 		osDelay(2);	//降低控制的频率
 	}
