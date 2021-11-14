@@ -67,7 +67,7 @@ int motor_code_using=0;
 //	double displacement;
 //}order_t;
 
-order_t order[50]={0,1/2.6,0,0,0,1000000};
+order_t order[50]={0,1/2.6,0,0,0,100000};
 //uint8_t	order_num
 //int16_t	vx
 //int16_t	vy
@@ -195,7 +195,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 			frame_high=0;
 			frame_change_allow=0;
 			front_door_down();
-			door_reset();
+			door_middle();
 			return;
 		}
 		

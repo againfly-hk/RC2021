@@ -179,7 +179,7 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 	motor_code_using=1;
 	osDelay(10);
 	
-  for(;;)//运动控制部分
+  for(;;)//运动控制部分,其他部分的代码已经写完,包括通信协议和物体检测
   {
 		angle=(car.yaw-car.begin_yaw)*2;
 		
@@ -201,60 +201,59 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 			PID_calc(&motor_move_displace_pid[0],motor[0].change,order[order_step].displacement);		
 			car.vx=motor_move_displace_pid[0].out;
 			car.vy=car.vx*order[order_step].rata;
-			
-			car.v1=-1*(1*car.vx+1*car.vy+28*car.w)*23.7946;//cm/s->rpm //关于速度的转换自动改成了对应的
-			car.v2=-1*(-1*car.vx+1*car.vy+28*car.w)*23.7946;//cm
-			car.v3=-1*(-1*car.vx-1*car.vy+28*car.w)*23.7946;
-			car.v4=-1*(1*car.vx+-1*car.vy+28*car.w)*23.7946;
-			
-			PID_calc(&motor_move_speed_pid[0],motor_chassis[0].speed_rpm,car.v1);
-			PID_calc(&motor_move_speed_pid[1],motor_chassis[1].speed_rpm,car.v2);
-			PID_calc(&motor_move_speed_pid[2],motor_chassis[2].speed_rpm,car.v3);
-			PID_calc(&motor_move_speed_pid[3],motor_chassis[3].speed_rpm,car.v4);
-			CAN_cmd_chassis(motor_move_speed_pid[0].out,motor_move_speed_pid[1].out,motor_move_speed_pid[2].out,motor_move_speed_pid[3].out);						
+			move_pid_calc();
       if(motor[0].change==order[order_step].displacement)	order_step++;
 		}
 		else if(order_step==1&&failure_warning!=10)
 		{
 			car.vx=0;
 			car.vy=0;
-			car.w=2;
-			while(((rx_line_buff[0]&0x01)&&(rx_line_buff[2]&0x08))||((rx_line_buff[0]&0x04)&&(rx_line_buff[2]&0x20))||((rx_line_buff[0]&0x10)&&(rx_line_buff[2]&0x80)))
+			car.w=0.5;
+			while(!(rx_line_buff[1]==0xFB&&rx_line_buff[3]==0xDF))
+//				(!(((rx_line_buff[0]&0x01)&&(rx_line_buff[2]&0x08))||((rx_line_buff[0]&0x04)&&(rx_line_buff[2]&0x20))||((rx_line_buff[0]&0x10)&&(rx_line_buff[2]&0x80))))
 			{
+				if(failure_warning!=10)
 				move_pid_calc();
 				osDelay(3);
 			}
 			car.w=0;
 			car.vx=20;
-			while(!(echo_distance<3000))
+			car.vy=0;
+			while(echo_distance>700)
 			{
+				if(failure_warning!=10)
 				move_pid_calc();
 				osDelay(3);
 			}
 			car.vx=0;
 			car.vy=10;
-			while(echo_distance>1500)
+			while(echo_distance>150)
 			{
+				if(failure_warning!=10)
 				move_pid_calc();
 				osDelay(3);
 			}
 			frame_high=120000;
 			spi_tx_buff[1]=0xF0;
 			car.vx=10;
+			car.vy=0;
 			while(!(spi_rx_buff[1]==0xF0))
 			{
+				if(failure_warning!=10)
 				move_pid_calc();
 				osDelay(3);
 			}
 			car.vx=0;
 			while(!(spi_rx_buff[1]==0xFA))
 			{
+				if(failure_warning!=10)
 				move_pid_calc();
 				osDelay(3);
 			}
 			car.vx=10;
 			while(!(spi_rx_buff[1]==0xF0))
 			{
+				if(failure_warning!=10)
 				move_pid_calc();
 				osDelay(3);
 			}

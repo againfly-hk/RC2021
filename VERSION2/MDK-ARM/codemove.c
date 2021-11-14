@@ -8,7 +8,7 @@ pid_type_def yaw_control_pid;
 
 void codemove_init()
 {
-	float codemove_pid[3]={0.001,0.000,0};
+	float codemove_pid[3]={0.002,0.000,0};
 	
 	PID_init(&motor_move_displace_pid[0],PID_POSITION,codemove_pid,20,5);
 	PID_init(&motor_move_displace_pid[1],PID_POSITION,codemove_pid,20,5);

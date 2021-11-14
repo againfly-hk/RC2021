@@ -28,31 +28,31 @@ Project File Date:  10/18/2021
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'D:\Program Files (x86)\Keil_v5\ARM\ARMCC\Bin'
 Build target 'VERSION2'
 compiling Callback.c...
-..\Application\Callback.c(193): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+..\Application\Callback.c(111): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		car.v1=-1*(1*car.vx+1*car.vy+28*car.w)*23.7946;//cm/s->rpm
+..\Application\Callback.c(112): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		car.v2=-1*(-1*car.vx+1*car.vy+28*car.w)*23.7946;//cm
+..\Application\Callback.c(113): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		car.v3=-1*(-1*car.vx-1*car.vy+28*car.w)*23.7946;
+..\Application\Callback.c(114): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+  		car.v4=-1*(1*car.vx+-1*car.vy+28*car.w)*23.7946;
+..\Application\Callback.c(205): warning:  #1035-D: single-precision operand implicitly converted to double-precision
   			car.v1=-1*(1*car.vx+1*car.vy+28*car.w)*23.7946;//cm/s->rpm //关于速度的转换自动改成了对应的
-..\Application\Callback.c(194): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  			car.v2=-1*(-1*car.vx+1*car.vy+28*car.w)*23.7946;//cm
-..\Application\Callback.c(195): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  			car.v3=-1*(-1*car.vx-1*car.vy+28*car.w)*23.7946;
-..\Application\Callback.c(196): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  			car.v4=-1*(1*car.vx+-1*car.vy+28*car.w)*23.7946;
 ..\Application\Callback.c(206): warning:  #1035-D: single-precision operand implicitly converted to double-precision
-  			car.v1=-1*(1*car.vx+1*car.vy+28*car.w)*23.7946;//cm/s->rpm
-..\Application\Callback.c(207): warning:  #1035-D: single-precision operand implicitly converted to double-precision
   			car.v2=-1*(-1*car.vx+1*car.vy+28*car.w)*23.7946;//cm
-..\Application\Callback.c(208): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+..\Application\Callback.c(207): warning:  #1035-D: single-precision operand implicitly converted to double-precision
   			car.v3=-1*(-1*car.vx-1*car.vy+28*car.w)*23.7946;
-..\Application\Callback.c(209): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+..\Application\Callback.c(208): warning:  #1035-D: single-precision operand implicitly converted to double-precision
   			car.v4=-1*(1*car.vx+-1*car.vy+28*car.w)*23.7946;
-..\Application\Callback.c(231): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+..\Application\Callback.c(289): warning:  #1035-D: single-precision operand implicitly converted to double-precision
   			car.raccel[0]=1.0072*(imu_real_data.accel[0]-accel_errodata[0]);
-..\Application\Callback.c(232): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+..\Application\Callback.c(290): warning:  #1035-D: single-precision operand implicitly converted to double-precision
   			car.raccel[1]=1.0065*(imu_real_data.accel[1]-accel_errodata[1]);
-..\Application\Callback.c(233): warning:  #1035-D: single-precision operand implicitly converted to double-precision
+..\Application\Callback.c(291): warning:  #1035-D: single-precision operand implicitly converted to double-precision
   			car.raccel[2]=1.0073*(imu_real_data.accel[2]-accel_errodata[2])+gravity;//修正校准误差
 ..\Application\Callback.c: 11 warnings, 0 errors
 linking...
-Program Size: Code=54328 RO-data=2964 RW-data=1964 ZI-data=47028  
+Program Size: Code=53960 RO-data=2964 RW-data=1980 ZI-data=47028  
 FromELF: creating hex file...
 "VERSION2\VERSION2.axf" - 0 Error(s), 11 Warning(s).
 
@@ -77,7 +77,7 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.4.0
-Build Time Elapsed:  00:00:03
+Build Time Elapsed:  00:00:07
 </pre>
 </body>
 </html>
