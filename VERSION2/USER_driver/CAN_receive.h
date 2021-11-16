@@ -43,6 +43,7 @@ typedef enum
 
 typedef struct
 {
+	uint8_t mode;
 	uint8_t	order_final;
 	float rata;
 	float v;

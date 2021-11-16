@@ -758,6 +758,11 @@
               <FileType>1</FileType>
               <FilePath>..\Components\controller\pid.c</FilePath>
             </File>
+            <File>
+              <FileName>movement.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\movement.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

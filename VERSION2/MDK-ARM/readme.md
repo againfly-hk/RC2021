@@ -124,3 +124,71 @@ highest 280000
 
 
 现在用的传感器：超声波、灰度巡线、编码器、陀螺仪、加速度计、磁力计
+
+		if(code_record==1&&CAR_TURE&&order_step==0)//这里是用编码器控制的代码，具体思路可以参考龙门架的代码
+		{
+			
+			PID_calc(&motor_move_displace_pid[0],motor[0].change,order[order_step].displacement);		
+			car.vx=motor_move_displace_pid[0].out;
+			car.vy=car.vx*order[order_step].rata;
+			move_pid_calc();
+      if(motor[0].change==order[order_step].displacement)	order_step++;
+		}
+		else if(order_step==1&&CAR_TURE)
+		{
+			car.vx=0;
+			car.vy=0;
+			car.w=0.5;
+			while(!(rx_line_buff[1]==0xFB&&rx_line_buff[3]==0xDF))
+//				(!(((rx_line_buff[0]&0x01)&&(rx_line_buff[2]&0x08))||((rx_line_buff[0]&0x04)&&(rx_line_buff[2]&0x20))||((rx_line_buff[0]&0x10)&&(rx_line_buff[2]&0x80))))
+			{
+				if(CAR_TURE)
+				move_pid_calc();
+				osDelay(3);
+			}
+			car.w=0;
+			car.vx=20;
+			car.vy=0;
+			while(echo_distance>700)
+			{
+				if(CAR_TURE)
+				move_pid_calc();
+				osDelay(3);
+			}
+			car.vx=0;
+			car.vy=10;
+			while(echo_distance>150)
+			{
+				if(CAR_TURE)
+				move_pid_calc();
+				osDelay(3);
+			}
+			frame_high=120000;
+			spi_tx_buff[1]=0xF0;
+			car.vx=10;
+			car.vy=0;
+			while(!(spi_rx_buff[1]==0xF0))
+			{
+				if(CAR_TURE)
+				move_pid_calc();
+				osDelay(3);
+			}
+			car.vx=0;
+			while(!(spi_rx_buff[1]==0xFA))
+			{
+				if(CAR_TURE)
+				move_pid_calc();
+				osDelay(3);
+			}
+			car.vx=10;
+			while(!(spi_rx_buff[1]==0xF0))
+			{
+				if(CAR_TURE)
+				move_pid_calc();
+				osDelay(3);
+			}
+		}
+		else if(code_record==0&&CAR_TURE)//这里面是写通过速度控制的代码
+		{	
+			
+		}

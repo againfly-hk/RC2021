@@ -35,10 +35,12 @@
 #include "user_lib.h"
 #include "arm_math.h"
 #include "codemove.h"
+#include "movement.h"
 
 #define Communication 3
 #define gravity				9.79484
 #define move_test
+#define CAR_TURE failure_warning!=10
 bmi088_raw_data_t 	imu_raw_data;
 bmi088_real_data_t 	imu_real_data;
 
@@ -108,6 +110,8 @@ extern int motor_code_using;
 CAR car;//记录开始的姿态
 void move_pid_calc(void)
 {
+		//相对于车体坐标系
+		//要乘以一个-1,这里是根据vx,vy,w反解出来的速度，用于速度环的控制,控制rpm  
 		car.v1=-1*(1*car.vx+1*car.vy+28*car.w)*23.7946;//cm/s->rpm
 		car.v2=-1*(-1*car.vx+1*car.vy+28*car.w)*23.7946;//cm
 		car.v3=-1*(-1*car.vx-1*car.vy+28*car.w)*23.7946;
@@ -182,91 +186,30 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
   for(;;)//运动控制部分,其他部分的代码已经写完,包括通信协议和物体检测
   {
 		angle=(car.yaw-car.begin_yaw)*2;
-		
 		cosa=cos(angle);
-		sina=sin(angle);//解析运动的姿态
-		
-		if(order[order_step].order_final==1)
+		sina=sin(angle);//解析运动的姿态	
+		if(order[order_step].order_final==1&&CAR_TURE)
 		{
 			order_step++;
-		}
+		}//更改命令
 		
+		if(order[order_step].order_final!=1&&CAR_TURE)
 		{
-		//相对于车体坐标系
-		//要乘以一个-1,这里是根据vx,vy,w反解出来的速度，用于速度环的控制,控制rpm  
-		
-		if(code_record==1&&failure_warning!=10&&order_step==0)//这里是用编码器控制的代码，具体思路可以参考龙门架的代码
-		{
-			
-			PID_calc(&motor_move_displace_pid[0],motor[0].change,order[order_step].displacement);		
-			car.vx=motor_move_displace_pid[0].out;
-			car.vy=car.vx*order[order_step].rata;
-			move_pid_calc();
-      if(motor[0].change==order[order_step].displacement)	order_step++;
-		}
-		else if(order_step==1&&failure_warning!=10)
-		{
-			car.vx=0;
-			car.vy=0;
-			car.w=0.5;
-			while(!(rx_line_buff[1]==0xFB&&rx_line_buff[3]==0xDF))
-//				(!(((rx_line_buff[0]&0x01)&&(rx_line_buff[2]&0x08))||((rx_line_buff[0]&0x04)&&(rx_line_buff[2]&0x20))||((rx_line_buff[0]&0x10)&&(rx_line_buff[2]&0x80))))
+			switch(order[order_step].mode)		
 			{
-				if(failure_warning!=10)
-				move_pid_calc();
-				osDelay(3);
-			}
-			car.w=0;
-			car.vx=20;
-			car.vy=0;
-			while(echo_distance>700)
-			{
-				if(failure_warning!=10)
-				move_pid_calc();
-				osDelay(3);
-			}
-			car.vx=0;
-			car.vy=10;
-			while(echo_distance>150)
-			{
-				if(failure_warning!=10)
-				move_pid_calc();
-				osDelay(3);
-			}
-			frame_high=120000;
-			spi_tx_buff[1]=0xF0;
-			car.vx=10;
-			car.vy=0;
-			while(!(spi_rx_buff[1]==0xF0))
-			{
-				if(failure_warning!=10)
-				move_pid_calc();
-				osDelay(3);
-			}
-			car.vx=0;
-			while(!(spi_rx_buff[1]==0xFA))
-			{
-				if(failure_warning!=10)
-				move_pid_calc();
-				osDelay(3);
-			}
-			car.vx=10;
-			while(!(spi_rx_buff[1]==0xF0))
-			{
-				if(failure_warning!=10)
-				move_pid_calc();
-				osDelay(3);
+				case 0:car_roll(order[order_step].angle,order[order_step].w);break;
+				case 1:car_straight_motion(order[order_step].v,order[order_step].rata,order[order_step].displacement);break;				
 			}
 		}
-		else if(code_record==0&&failure_warning!=10)//这里面是写通过速度控制的代码
-		{	
-			
+		else
+		{
+			CAN_cmd_chassis(0,0,0,0);
 		}
 
-		osDelay(2);	//降低控制的频率
 	}
 }
-}
+
+
 //外部中断处理
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 { 

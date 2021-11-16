@@ -27,7 +27,9 @@ extern uint8_t spi_tx_buff[];
 extern uint8_t spi_rx_buff[];
 extern uint8_t	spicnt;
 extern int pwm_set;
-int echo_distance=100000;
+int16_t echo_distance=10000;
+int16_t echo_distance_buff[8]={10000,10000,10000,10000,10000,10000,10000,10000};
+int16_t* echo_p=NULL;
 uint8_t movement_test=0;
 int movement_osdelay=1000;
 
@@ -35,10 +37,20 @@ void line_detect_task(void const * argument)
 {			
 	HAL_SPI_Receive_IT(&hspi2,&spi_rx_buff[spicnt],1);
 	while(gyro_flag!=2)	{osDelay(10);}
+	echo_p=&echo_distance_buff[0];
 	
   while(1)
 	{
 		echo_distance=rx_echo_buff[0]<<8|rx_echo_buff[1];
+		*echo_p=echo_distance;
+		if(echo_p==&echo_distance_buff[7])
+		{
+			echo_p=&echo_distance_buff[0];
+		}
+		else
+		{
+			echo_p++;			
+		}
 		osDelay(2);
 //		if(movement_test==0)
 //		{
