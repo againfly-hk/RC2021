@@ -60,7 +60,7 @@ int motor_code_using=0;
 //typedef struct
 //{
 //	uint8_t	order_final;
-//	float rata;
+//	float rata;e
 //	float v;
 //	float w;
 //	float angle;

@@ -65,6 +65,7 @@
 "version2\filter.o"
 "version2\matrix.o"
 "version2\pid.o"
+"version2\movement.o"
 "version2\door_servo.o"
 "version2\can_receive.o"
 "version2\frame.o"

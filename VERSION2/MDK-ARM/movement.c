@@ -31,10 +31,10 @@
 extern CAR car;//记录开始的姿态
 void car_roll(float angle,float w)
 {
-	car.begin_yaw+=angle;
+//	car.begin_yaw+=angle;
 	while(fabs((car.yaw-car.begin_yaw)/car.begin_yaw)<0.005)
 	{
-		
+		 
 	}
 	
 }

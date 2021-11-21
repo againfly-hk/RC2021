@@ -152,7 +152,7 @@ __weak void test_task(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    osDelay(100);
   }
   /* USER CODE END test_task */
 }
@@ -170,7 +170,7 @@ __weak void line_detect_task(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    osDelay(100);
   }
   /* USER CODE END line_detect_task */
 }

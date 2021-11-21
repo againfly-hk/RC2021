@@ -178,34 +178,34 @@ void test_task(void const * argument)//test_task用于imu的温度控制，以及灯光控制
 	__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_1,0);//这前面都是传感器和pid的初始化
 	codemove_init();
 	frame_high=200000;		gyro_flag=2;//当flag=2时进行姿态的解算
-	osDelay(20);
+	osDelay(200);
 	car.begin_yaw=car.yaw;	
 	motor_code_using=1;
 	osDelay(10);
 	
   for(;;)//运动控制部分,其他部分的代码已经写完,包括通信协议和物体检测
   {
-		angle=(car.yaw-car.begin_yaw)*2;
-		cosa=cos(angle);
-		sina=sin(angle);//解析运动的姿态	
-		if(order[order_step].order_final==1&&CAR_TURE)
-		{
-			order_step++;
-		}//更改命令
-		
-		if(order[order_step].order_final!=1&&CAR_TURE)
-		{
-			switch(order[order_step].mode)		
-			{
-				case 0:car_roll(order[order_step].angle,order[order_step].w);break;
-				case 1:car_straight_motion(order[order_step].v,order[order_step].rata,order[order_step].displacement);break;				
-			}
-		}
-		else
-		{
-			CAN_cmd_chassis(0,0,0,0);
-		}
-
+//		angle=(car.yaw-car.begin_yaw)*2;
+//		cosa=cos(angle);
+//		sina=sin(angle);//解析运动的姿态	
+//		if(order[order_step].order_final==1&&CAR_TURE)
+//		{
+//			order_step++;
+//		}//更改命令
+//		
+//		if(order[order_step].order_final!=1&&CAR_TURE)
+//		{
+//			switch(order[order_step].mode)		
+//			{
+//				case 0:car_roll(order[order_step].angle,order[order_step].w);break;
+//				case 1:car_straight_motion(order[order_step].v,order[order_step].rata,order[order_step].displacement);break;				
+//			}
+//		}
+//		else
+//		{
+//			CAN_cmd_chassis(0,0,0,0);
+//		}
+		osDelay(500);
 	}
 }
 
